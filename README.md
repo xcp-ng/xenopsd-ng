@@ -37,22 +37,34 @@ For all of them: we need to evaluate if it fits for the role in the "global" asp
 
 #### Go
 
+Pros:
 + Relatively simple
 + Learning curve should be OK
+
+Cons:
 - Got a GC
 
 #### Rust
 
+Pros:
 + Memory safe!
 + No GC
+
+Cons:
 - Learning curve? Hard to tell for our use case
 
 #### C
 
+Pros:
 + Same language than Xen (homogeneity)
+
+Cons:
 - Might be hard to have a complete "higher" level API written in such low level language? (maintenance, leaks…)
 
 #### Python
 
+Pros:
 + Simple
+
+Cons:
 - Might be badly used and that led to `xend`
