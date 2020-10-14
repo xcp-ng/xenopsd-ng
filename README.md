@@ -17,6 +17,10 @@ In short, the goal is to start reimplementing `xenopsd` in another language. "To
 
 So this is a kind of "parallel" work between reimplementing and doing some work in Xen itself when we spot suboptimal cases.
 
+## Current API status
+
+![](https://nextcloud.vates.fr/index.php/apps/files_sharing/publicpreview/woNa6xPnfKL6oSx?x=1280&y=952&a=true&file=xentoolstack.png)
+
 ## Languages
 
 There's no community consencus yet on choosing the new `xenopsd-ng` language. This is why we'll try to implement PoC in different languages. This will probably help us to choose what's the best fit before going for a definitive decision.
