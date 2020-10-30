@@ -8,7 +8,7 @@ use xenctrl_sys::xc_interface_open;
 
 fn help() {
   println!("usage:
-xenopsd-ng-cli {{pause|unpause}} <integer>
+cargo run {{pause|unpause}} <integer>
   pause/unpause a vm if the integer is a valid domid.");
 }
 
