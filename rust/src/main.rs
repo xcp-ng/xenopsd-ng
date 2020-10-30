@@ -14,14 +14,14 @@ xenopsd-ng-cli {{pause|unpause}} <integer>
 
 unsafe fn pause_vm(xc: *mut xc_interface ,domid: u32) {
   let i = xc_domain_pause(xc, domid);
-  if (i != 0) {
+  if i != 0 {
     eprintln!("error while pausing domain");
   };
 }
 
 unsafe fn unpause_vm(xc: *mut xc_interface, domid: u32) {
   let i = xc_domain_unpause(xc, domid);
-  if (i != 0) {
+  if i != 0 {
     eprintln!("error while unpausing domain");
   };
 }
@@ -57,7 +57,7 @@ fn main() {
           },
         };
         let i = xc_interface_close(xc);
-        if (i != 0) {
+        if i != 0 {
           eprintln!("error while closing interface");
         }
       }
