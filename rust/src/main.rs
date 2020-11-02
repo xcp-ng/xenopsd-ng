@@ -23,7 +23,7 @@ fn main() {
           eprintln!("error: second argument not an integer");
           help();
           return
-        },
+        }
       };
 
       // parse the command
