@@ -38,9 +38,7 @@ fn main() {
       let num = &args[2];
       // parse the number
       let domid: u32 = match num.parse() {
-        Ok(n) => {
-          n
-        },
+        Ok(n) => n,
         Err(_) => {
           eprintln!("error: second argument not an integer");
           help();
@@ -65,8 +63,6 @@ fn main() {
       }
     },
     // all the other cases
-    _ => {
-      help();
-    }
+    _ => help(),
   }
 }
