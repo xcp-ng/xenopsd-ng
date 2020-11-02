@@ -154,7 +154,7 @@ impl Xenctrl {
 
   pub fn pause_domain (&self, domid: u32) -> Result<()> {
     unsafe {
-      match xenctrl_sys::xc_domain_unpause(self.xc, domid) {
+      match xenctrl_sys::xc_domain_pause(self.xc, domid) {
         0 => Ok(()),
         _ => Err(self.get_last_error())
       }
