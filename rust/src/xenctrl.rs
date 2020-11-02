@@ -152,18 +152,18 @@ impl Xenctrl {
     }
   }
 
-  pub fn pause_domain (&self, domid: u32) -> Result<()> {
+  pub fn pause_domain (&self, dom_id: u32) -> Result<()> {
     unsafe {
-      match xenctrl_sys::xc_domain_pause(self.xc, domid) {
+      match xenctrl_sys::xc_domain_pause(self.xc, dom_id) {
         0 => Ok(()),
         _ => Err(self.get_last_error())
       }
     }
   }
 
-  pub fn unpause_domain (&self, domid: u32) -> Result<()> {
+  pub fn unpause_domain (&self, dom_id: u32) -> Result<()> {
     unsafe {
-      match xenctrl_sys::xc_domain_unpause(self.xc, domid) {
+      match xenctrl_sys::xc_domain_unpause(self.xc, dom_id) {
         0 => Ok(()),
         _ => Err(self.get_last_error())
       }

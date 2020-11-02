@@ -17,7 +17,7 @@ fn main() {
       let cmd = &args[1];
       let num = &args[2];
       // parse the number
-      let domid: u32 = match num.parse() {
+      let dom_id: u32 = match num.parse() {
         Ok(n) => n,
         Err(_) => {
           eprintln!("error: second argument not an integer");
@@ -30,21 +30,21 @@ fn main() {
       let xc = match xenctrl::Xenctrl::new() {
         Ok(n) => n,
         Err(e) => {
-          eprintln!("Error while opening xenctrl interface: {:?}", e);
+          eprintln!("Error while opening xenctrl interface: {}", e);
           return;
         }
       };
       match &cmd[..] {
-        "pause" => match xc.pause_domain(domid) {
+        "pause" => match xc.pause_domain(dom_id) {
           Ok(_) => (),
-          Err(e) => eprintln!("Error while pausing domain: {}, {}", domid, e)
+          Err(e) => eprintln!("Error while pausing domain: {}, {}", dom_id, e)
         },
-        "unpause" => match xc.unpause_domain(domid) {
+        "unpause" => match xc.unpause_domain(dom_id) {
           Ok(_) => (),
-          Err(e) => eprintln!("Error while pausing domain: {}, {}", domid, e)
+          Err(e) => eprintln!("Error while pausing domain: {}, {}", dom_id, e)
         },
         _ => {
-          eprintln!("error: invalid command");
+          eprintln!("Error: invalid command");
           help();
         },
       };
