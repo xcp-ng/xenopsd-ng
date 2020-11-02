@@ -1,11 +1,15 @@
 [package]
-name = "rust"
+name = "xenopsd-rs"
 version = "0.1.0"
-authors = ["BenjiReis <benjamin.reis@vates.fr>"]
+authors = ["BenjiReis <benjamin.reis@vates.fr>", "Ronan Abhamon <ronan.abhamon@vates.fr>"]
 edition = "2018"
+description = "Rust implementation of xenopsd"
+readme = "README.md"
+license = "GPL-3.0-only"
+keywords = ["xen", "xenopsd"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+uuid = "0.6.5"
 xenctrl-sys = { git = "https://github.com/Wenzel/xenctrl-sys" }
-
