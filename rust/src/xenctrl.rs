@@ -151,4 +151,22 @@ impl Xenctrl {
       }
     }
   }
+
+  pub fn pause_domain (&self, domid: u32) -> Result<()> {
+    unsafe {
+      match xenctrl_sys::xc_domain_unpause(self.xc, domid) {
+        0 => Ok(()),
+        _ => Err(self.get_last_error())
+      }
+    }
+  }
+
+  pub fn unpause_domain (&self, domid: u32) -> Result<()> {
+    unsafe {
+      match xenctrl_sys::xc_domain_unpause(self.xc, domid) {
+        0 => Ok(()),
+        _ => Err(self.get_last_error())
+      }
+    }
+  }
 }

@@ -1,31 +1,11 @@
 use std::env;
-use std::ptr::null_mut;
-use xenctrl_sys::xc_domain_pause;
-use xenctrl_sys::xc_domain_unpause;
-use xenctrl_sys::xc_interface;
-use xenctrl_sys::xc_interface_close;
-use xenctrl_sys::xc_interface_open;
+
+mod xenctrl;
 
 fn help() {
   println!("usage:
 cargo run {{pause|unpause}} <integer>
   pause/unpause a vm if the integer is a valid domid.");
-}
-
-unsafe fn pause_vm(xc: *mut xc_interface ,domid: u32) {
-  println!("Pausing VM: {}, {:?}", domid, xc);
-  let i = xc_domain_pause(xc, domid);
-  if i != 0 {
-    eprintln!("error while pausing domain");
-  };
-}
-
-unsafe fn unpause_vm(xc: *mut xc_interface, domid: u32) {
-  println!("Unpausing VM: {}, {:?}", domid, xc);
-  let i = xc_domain_unpause(xc, domid);
-  if i != 0 {
-    eprintln!("error while unpausing domain");
-  };
 }
 
 fn main() {
@@ -45,22 +25,29 @@ fn main() {
           return;
         },
       };
-      unsafe {
-        let xc = xc_interface_open(null_mut(), null_mut(), 0);
-        // parse the command
-        match &cmd[..] {
-          "pause" => pause_vm(xc, domid),
-          "unpause" => unpause_vm(xc, domid),
-          _ => {
-            eprintln!("error: invalid command");
-            help();
-          },
-        };
-        let i = xc_interface_close(xc);
-        if i != 0 {
-          eprintln!("error while closing interface");
+
+      // parse the command
+      let xc = match xenctrl::Xenctrl::new() {
+        Ok(n) => n,
+        Err(e) => {
+          eprintln!("Error while opening xenctrl interface: {:?}", e);
+          return;
         }
-      }
+      };
+      match &cmd[..] {
+        "pause" => match xc.pause_domain(domid) {
+          Ok(_) => (),
+          Err(e) => eprintln!("Error while pausing domain: {}, {}", domid, e)
+        },
+        "unpause" => match xc.unpause_domain(domid) {
+          Ok(_) => (),
+          Err(e) => eprintln!("Error while pausing domain: {}, {}", domid, e)
+        },
+        _ => {
+          eprintln!("error: invalid command");
+          help();
+        },
+      };
     },
     // all the other cases
     _ => help()
