@@ -22,7 +22,7 @@ fn main() {
         Err(_) => {
           eprintln!("error: second argument not an integer");
           help();
-          return;
+          return
         },
       };
 
@@ -31,7 +31,7 @@ fn main() {
         Ok(n) => n,
         Err(e) => {
           eprintln!("Error while opening xenctrl interface: {}", e);
-          return;
+          return
         }
       };
       match &cmd[..] {
@@ -45,9 +45,9 @@ fn main() {
         },
         _ => {
           eprintln!("Error: invalid command");
-          help();
-        },
-      };
+          help()
+        }
+      }
     },
     // all the other cases
     _ => help()
