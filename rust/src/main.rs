@@ -1,15 +1,31 @@
 use std::env;
 
+mod vm;
 mod xenctrl;
+mod xenstore;
+
+// =============================================================================
 
 fn help() {
   println!("usage:
-cargo run {{pause|unpause}} <integer>
-  pause/unpause a vm if the integer is a valid domid.");
+cargo run {{pause|unpause|shutdown}} <integer>
+  pause/unpause or shutdown a vm if the integer is a valid domain id.")
 }
+
+// -----------------------------------------------------------------------------
 
 fn main() {
   let args: Vec<String> = env::args().collect();
+
+
+  let xs = xenstore::Xenstore::new();
+  let xc = match xenctrl::Xenctrl::new() {
+    Ok(xc) => xc,
+    Err(e) => {
+      eprintln!("Failed to get Xenctrl instance: {}", e);
+      return
+    }
+  };
 
   match args.len() {
     // one command and one argument passed
@@ -27,13 +43,6 @@ fn main() {
       };
 
       // parse the command
-      let xc = match xenctrl::Xenctrl::new() {
-        Ok(n) => n,
-        Err(e) => {
-          eprintln!("Error while opening xenctrl interface: {}", e);
-          return
-        }
-      };
       match &cmd[..] {
         "pause" => match xc.pause_domain(dom_id) {
           Ok(_) => (),
@@ -43,12 +52,28 @@ fn main() {
           Ok(_) => (),
           Err(e) => eprintln!("Error while pausing domain: {}, {}", dom_id, e)
         },
+        "shutdown" => {
+          // TODO: parse from args?
+          let reason = vm::ShutdownReason::PowerOff;
+
+          // Useless but demonstrative :)
+          // Find uuid from domid
+          match xc.get_domain_handle(dom_id) {
+            Ok(dom_handle) => println!("Domain UUID {}", xenctrl::get_uuid_from_domain_handle(&dom_handle)),
+            Err(e) => eprintln!("Failed to get domain handle: {}", e)
+          };
+
+          match vm::shutdown(&xs, dom_id, reason) {
+            Ok(()) => println!("Shutdown!"),
+            Err(e) => eprintln!("Failed to shutdown: {}", e)
+          }
+        },
         _ => {
           eprintln!("Error: invalid command");
           help()
         }
       }
-    },
+    }
     // all the other cases
     _ => help()
   }
