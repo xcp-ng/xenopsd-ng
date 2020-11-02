@@ -63,6 +63,6 @@ fn main() {
       }
     },
     // all the other cases
-    _ => help(),
+    _ => help()
   }
 }
