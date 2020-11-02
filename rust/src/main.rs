@@ -1,31 +1,11 @@
 use std::env;
-use std::ptr::null_mut;
-use xenctrl_sys::xc_domain_pause;
-use xenctrl_sys::xc_domain_unpause;
-use xenctrl_sys::xc_interface;
-use xenctrl_sys::xc_interface_close;
-use xenctrl_sys::xc_interface_open;
+
+mod xenctrl;
 
 fn help() {
   println!("usage:
 cargo run {{pause|unpause}} <integer>
   pause/unpause a vm if the integer is a valid domid.");
-}
-
-unsafe fn pause_vm(xc: *mut xc_interface ,domid: u32) {
-  println!("Pausing VM: {}, {:?}", domid, xc);
-  let i = xc_domain_pause(xc, domid);
-  if i != 0 {
-    eprintln!("error while pausing domain");
-  };
-}
-
-unsafe fn unpause_vm(xc: *mut xc_interface, domid: u32) {
-  println!("Unpausing VM: {}, {:?}", domid, xc);
-  let i = xc_domain_unpause(xc, domid);
-  if i != 0 {
-    eprintln!("error while unpausing domain");
-  };
 }
 
 fn main() {
@@ -37,28 +17,35 @@ fn main() {
       let cmd = &args[1];
       let num = &args[2];
       // parse the number
-      let domid: u32 = match num.parse() {
+      let dom_id: u32 = match num.parse() {
         Ok(n) => n,
         Err(_) => {
           eprintln!("error: second argument not an integer");
           help();
-          return;
-        },
+          return
+        }
       };
-      unsafe {
-        let xc = xc_interface_open(null_mut(), null_mut(), 0);
-        // parse the command
-        match &cmd[..] {
-          "pause" => pause_vm(xc, domid),
-          "unpause" => unpause_vm(xc, domid),
-          _ => {
-            eprintln!("error: invalid command");
-            help();
-          },
-        };
-        let i = xc_interface_close(xc);
-        if i != 0 {
-          eprintln!("error while closing interface");
+
+      // parse the command
+      let xc = match xenctrl::Xenctrl::new() {
+        Ok(n) => n,
+        Err(e) => {
+          eprintln!("Error while opening xenctrl interface: {}", e);
+          return
+        }
+      };
+      match &cmd[..] {
+        "pause" => match xc.pause_domain(dom_id) {
+          Ok(_) => (),
+          Err(e) => eprintln!("Error while pausing domain: {}, {}", dom_id, e)
+        },
+        "unpause" => match xc.unpause_domain(dom_id) {
+          Ok(_) => (),
+          Err(e) => eprintln!("Error while pausing domain: {}, {}", dom_id, e)
+        },
+        _ => {
+          eprintln!("Error: invalid command");
+          help()
         }
       }
     },
