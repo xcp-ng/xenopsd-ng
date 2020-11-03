@@ -116,7 +116,7 @@ impl Xenctrl {
 
   pub fn get_domain_handle (&self, dom_id: u32) -> Result<DomainHandle> {
     unsafe {
-      let mut info: xenctrl_sys::xc_domaininfo_t = std::mem::MaybeUninit::uninit().assume_init();
+      let mut info: DomainInfo = std::mem::MaybeUninit::uninit().assume_init();
       let ret = xenctrl_sys::xc_domain_getinfolist(self.xc, dom_id, 1, &mut info);
       if ret != 1 || u32::from(info.domain) != dom_id {
         let error = self.get_last_error();
