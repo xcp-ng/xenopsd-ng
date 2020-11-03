@@ -177,10 +177,10 @@ impl Xenctrl {
   pub fn list_domains (&self) -> Result<Vec<DomainInfo>> {
     unsafe {
       let max_doms: u32 = 1024;
-      let mut info: Vec<xenctrl_sys::xc_domaininfo_t> = Vec::with_capacity(max_doms as usize);
+      let mut info: Vec<DomainInfo> = Vec::with_capacity(max_doms as usize);
       info.resize_with(max_doms as usize, Default::default);
       let mut dom_id = 0;
-      let mut res: Vec<xenctrl_sys::xc_domaininfo_t> = Vec::new();
+      let mut res: Vec<DomainInfo> = Vec::new();
       loop {
         let ret = xenctrl_sys::xc_domain_getinfolist(self.xc, dom_id, max_doms, info.as_mut_ptr());
         match ret {
@@ -196,7 +196,7 @@ impl Xenctrl {
           n => {
             let info_res = &info[0..n as usize];
             for i in 0..n {
-              let info_i = info[i as usize];
+              let info_i: DomainInfo = info[i as usize];
               let info_dom_id = info_i.domain;
               dom_id = std::cmp::max(dom_id, info_dom_id.into()) + 1;
               res.push(info_i);
