@@ -180,7 +180,7 @@ impl Xenctrl {
       let mut info: Vec<DomainInfo> = Vec::with_capacity(max_doms as usize);
       info.resize_with(max_doms as usize, Default::default);
       let mut dom_id = 0;
-      let mut res: Vec<DomainInfo> = Vec::new();
+      let mut domains = Vec::new();
       loop {
         let ret = xenctrl_sys::xc_domain_getinfolist(self.xc, dom_id, max_doms, info.as_mut_ptr());
         match ret {
@@ -199,13 +199,13 @@ impl Xenctrl {
               let info_i = info[i as usize];
               let info_dom_id = info_i.domain;
               dom_id = std::cmp::max(dom_id, info_dom_id.into()) + 1;
-              res.push(info_i);
+              domains.push(info_i);
             }
           }
         }
       }
 
-      Ok(res)
+      Ok(domains)
     }
   }
 }

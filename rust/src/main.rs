@@ -34,7 +34,7 @@ fn main() {
       match &cmd[..] {
         "list-domains" => {
           match xc.list_domains() {
-            Ok(res) => println!("domains: {:?}", res),
+            Ok(domains) => println!("domains: {:?}", domains),
             Err(e) => eprintln!("Error while listing domains: {}", e)
           }
         },
