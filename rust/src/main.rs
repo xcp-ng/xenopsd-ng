@@ -28,6 +28,22 @@ fn main() {
   };
 
   match args.len() {
+    // one command passed
+    2 => {
+      let cmd = &args[1];
+      match &cmd[..] {
+        "list-domains" => {
+          match xc.list_domains() {
+            Ok(domains) => println!("domains: {:?}", domains),
+            Err(e) => eprintln!("Error while listing domains: {}", e)
+          }
+        },
+        _ => {
+          eprintln!("Error: invalid command");
+          help()
+        }
+      }
+    },
     // one command and one argument passed
     3 => {
       let cmd = &args[1];

@@ -90,6 +90,10 @@ pub fn get_uuid_from_domain_handle (dom_handle: &DomainHandle) -> String {
   Uuid::from_bytes(dom_handle).unwrap().to_string()
 }
 
+// -----------------------------------------------------------------------------
+
+pub type DomainInfo = xenctrl_sys::xen_domctl_getdomaininfo_t;
+
 // =============================================================================
 
 pub struct Xenctrl {
@@ -112,14 +116,14 @@ impl Xenctrl {
 
   pub fn get_domain_handle (&self, dom_id: u32) -> Result<DomainHandle> {
     unsafe {
-      let mut info: xenctrl_sys::xc_domaininfo_t = std::mem::MaybeUninit::uninit().assume_init();
+      let mut info: DomainInfo = std::mem::MaybeUninit::uninit().assume_init();
       let ret = xenctrl_sys::xc_domain_getinfolist(self.xc, dom_id, 1, &mut info);
       if ret != 1 || u32::from(info.domain) != dom_id {
         let error = self.get_last_error();
         if error.code == ErrorCode::None {
-          return Err(Error::new(ErrorCode::InvalidParam, ""));
+          return Err(Error::new(ErrorCode::InvalidParam, ""))
         } else {
-          return Err(error);
+          return Err(error)
         }
       }
 
@@ -167,6 +171,42 @@ impl Xenctrl {
         0 => Ok(()),
         _ => Err(self.get_last_error())
       }
+    }
+  }
+
+  pub fn list_domains (&self) -> Result<Vec<DomainInfo>> {
+    unsafe {
+      let max_doms: u32 = 1024;
+      let mut chunk: Vec<DomainInfo> = Vec::with_capacity(max_doms as usize);
+      chunk.resize_with(max_doms as usize, Default::default);
+      let mut dom_id = 0;
+      let mut domains = Vec::new();
+      loop {
+        let ret = xenctrl_sys::xc_domain_getinfolist(self.xc, dom_id, max_doms, chunk.as_mut_ptr());
+        match ret {
+          -1 => {
+            let error = self.get_last_error();
+            if error.code == ErrorCode::None {
+              return Err(Error::new(ErrorCode::InvalidParam, ""))
+            } else {
+              return Err(error)
+            }
+          },
+          0 => break,
+          n => {
+            let n = n as usize;
+            domains.reserve(n);
+            for i in 0..n {
+              let dom_info = chunk[i];
+              let info_dom_id = dom_info.domain;
+              dom_id = std::cmp::max(dom_id, info_dom_id.into()) + 1;
+              domains.push(dom_info);
+            }
+          }
+        }
+      }
+
+      Ok(domains)
     }
   }
 }
