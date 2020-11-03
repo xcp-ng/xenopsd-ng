@@ -194,9 +194,9 @@ impl Xenctrl {
           },
           0 => break,
           n => {
-            let nusize = n as usize;
-            let info_res = &info[0..nusize];
-            for i in 0..nusize {
+            let n = n as usize;
+            let info_res = &info[0..n];
+            for i in 0..n {
               let info_i = info[i];
               let info_dom_id = info_i.domain;
               dom_id = std::cmp::max(dom_id, info_dom_id.into()) + 1;
