@@ -194,6 +194,7 @@ impl Xenctrl {
           },
           0 => break,
           n => {
+            domains.reserve(n);
             for i in 0..n as usize {
               let dom_info = chunk[i];
               let info_dom_id = dom_info.domain;
