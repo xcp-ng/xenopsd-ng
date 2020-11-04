@@ -15,7 +15,7 @@ cargo {build|run} -p xenopsd
 > curl -X POST -H "Content-Type: application/json" -d '{"jsonrpc": "2.0", "method": "host.domain-list", "id":123 }' <server_ip>:3030
 {"jsonrpc":"2.0","result":[0,10],"id":123}
 ```
-> the result is the list of existing domain ids
+> The result is the list of existing domain ids.
 
 ## Pause a domain
 
