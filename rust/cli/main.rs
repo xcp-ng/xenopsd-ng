@@ -7,7 +7,9 @@ use xenops::*;
 fn help () {
   println!("usage:
 xenops-cli {{pause|unpause|shutdown}} <integer>
-  pause/unpause or shutdown a vm if the integer is a valid domain id.")
+  pause/unpause or shutdown a vm if the integer is a valid domain id.
+xenops-cli domain-list`
+  list all domains ids.")
 }
 
 // -----------------------------------------------------------------------------
