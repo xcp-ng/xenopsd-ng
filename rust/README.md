@@ -4,7 +4,7 @@ Basic POC based on [Wendel's rust binding of libxc](https://github.com/Wenzel/xe
 
 Install `cargo`, `rustc` & `xen-devel`
 
-## Specific case: XCP-ng
+## On XCP-ng
 
 To install what's needed, run following commands:
 ```
