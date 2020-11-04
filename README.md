@@ -17,6 +17,10 @@ In short, the goal is to start reimplementing `xenopsd` in another language. "To
 
 So this is a kind of "parallel" work between reimplementing and doing some work in Xen itself when we spot suboptimal cases.
 
+### Architecture objective
+
+![](https://nextcloud.vates.fr/index.php/apps/files_sharing/publicpreview/nFDMDjbCakT5FYi?x=1280&y=989&a=true&file=xennew.png)
+
 ## Current API status
 
 ![](https://nextcloud.vates.fr/index.php/apps/files_sharing/publicpreview/woNa6xPnfKL6oSx?x=1280&y=952&a=true&file=xentoolstack.png)
