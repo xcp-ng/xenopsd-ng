@@ -28,8 +28,11 @@ pub struct Xenstore {
 }
 
 impl Xenstore {
-  pub fn new () -> Self {
-    unsafe { Self { xs: xenstore_sys::xs_open(0) } }
+  pub fn new () -> std::result::Result<Self, &'static str> {
+    unsafe {
+      let xs = xenstore_sys::xs_open(0);
+      if !xs.is_null() { Ok(Self { xs }) } else { Err("Failed to open xenstore") }
+    }
   }
 
   pub fn get_domain_path (&self, dom_id: u32) -> String {
@@ -44,6 +47,8 @@ impl Drop for Xenstore {
     unsafe { xenstore_sys::xs_close(self.xs); }
   }
 }
+
+unsafe impl Send for Xenstore {}
 
 // -----------------------------------------------------------------------------
 
