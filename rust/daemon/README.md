@@ -28,7 +28,7 @@ cargo {build|run} -p xenopsd
 > curl -X POST -H "Content-Type: application/json" -d '{"jsonrpc": "2.0", "method": "vm.pause", "params": { "dom_id": 12 }, "id": 1}' <server_ip>:3030
 {"jsonrpc":"2.0","error":{"code":0,"message":"-3: No such process (os error 3) ()"},"id":1}
 ```
-> Here the dom_id is invalid
+> Here the dom_id is invalid.
 
 ## Unpause a domain
 
