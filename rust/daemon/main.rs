@@ -82,4 +82,30 @@ fn main () {
       Err(e) => Err(make_error(&e.to_string()))
     }
   } } );
+
+  // Test above methods
+  let mut request = r#"{"jsonrpc": "2.0", "method": "vm.pause", "params": { "dom_id": 7 }, "id": 1}"#;
+	let mut response = r#"{"jsonrpc":"2.0","result":"success","id":1}"#;
+  assert_eq!(io.handle_request_sync(request), Some(response.to_owned()));
+
+  request = r#"{"jsonrpc": "2.0", "method": "vm.pause", "params": { "dom_id": 12 }, "id": 1}"#;
+  response = r#"{"jsonrpc":"2.0","result":"success","id":1}"#;
+  assert_eq!(io.handle_request_sync(request), Some(response.to_owned()));
+
+  request = r#"{"jsonrpc": "2.0", "method": "vm.unpause", "params": { "dom_id": 7 }, "id": 1}"#;
+	response = r#"{"jsonrpc":"2.0","result":"success","id":1}"#;
+  assert_eq!(io.handle_request_sync(request), Some(response.to_owned()));
+
+  request = r#"{"jsonrpc": "2.0", "method": "vm.unpause", "params": { "dom_id": 12 }, "id": 1}"#;
+  response = r#"{"jsonrpc":"2.0","result":"success","id":1}"#;
+  assert_eq!(io.handle_request_sync(request), Some(response.to_owned()));
+
+  request = r#"{"jsonrpc": "2.0", "method": "vm.shutdown", "params": { "dom_id": 7 }, "id": 1}"#;
+	response = r#"{"jsonrpc":"2.0","result":"success","id":1}"#;
+  assert_eq!(io.handle_request_sync(request), Some(response.to_owned()));
+
+  request = r#"{"jsonrpc": "2.0", "method": "vm.shutdown", "params": { "dom_id": 12 }, "id": 1}"#;
+  response = r#"{"jsonrpc":"2.0","result":"success","id":1}"#;
+  assert_eq!(io.handle_request_sync(request), Some(response.to_owned()));
+
 }
