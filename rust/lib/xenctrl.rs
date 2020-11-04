@@ -176,7 +176,7 @@ impl Xenctrl {
     }
   }
 
-  pub fn list_domains (&self) -> Result<Vec<DomainInfo>> {
+  pub fn get_domain_info_list (&self) -> Result<Vec<DomainInfo>> {
     unsafe {
       let max_doms: u32 = 1024;
       let mut chunk: Vec<DomainInfo> = Vec::with_capacity(max_doms as usize);
