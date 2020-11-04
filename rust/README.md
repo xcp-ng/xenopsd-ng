@@ -8,7 +8,7 @@ Install `cargo`, `rustc` & `xen-devel`
 
 To install what's needed, run following commands:
 ```
-yum install llvm-devel clang xen-devel --enablerepo="*"
+yum install llvm-devel clang gcc xen-devel --enablerepo="*"
 
 curl https://sh.rustup.rs -sSf | sh
 
