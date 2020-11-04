@@ -88,7 +88,7 @@ fn main () {
     .threads(2)
     .rest_api(RestApi::Unsecure)
     .cors(DomainsValidation::AllowOnly(vec![AccessControlAllowOrigin::Any]))
-    .start_http(&"0.0.0.0:3030".parse().unwrap()) // Any ip
+    .start_http(&"0.0.0.0:3030".parse().unwrap()) // Any ip.
     .expect("Unable to start RPC server");
 
   server.wait();
