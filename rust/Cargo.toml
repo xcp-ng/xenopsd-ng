@@ -1,17 +1,25 @@
 [package]
-name = "xenopsd-rs"
+name = "xenops"
 version = "0.1.0"
 authors = ["BenjiReis <benjamin.reis@vates.fr>", "Ronan Abhamon <ronan.abhamon@vates.fr>"]
 edition = "2018"
-description = "Rust implementation of xenopsd"
+description = "Rust implementation of xenops"
 readme = "README.md"
 license = "GPL-3.0-only"
 keywords = ["xen", "xenopsd"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-libc = "0.2.80"
-uuid = "0.6.5"
 xenctrl-sys = { git = "https://github.com/Wenzel/xenctrl-sys" }
 xenstore-sys = { git = "https://github.com/Wenzel/xenstore-sys" }
+libc = "0.2.80"
+uuid = "0.6.5"
+
+[lib]
+path = "lib/lib.rs"
+
+[[bin]]
+name = "xenops-cli"
+path = "cli/main.rs"
+
+[workspace]
+members = ["daemon"]

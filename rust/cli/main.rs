@@ -1,28 +1,31 @@
 use std::env;
 
-mod vm;
-mod xenctrl;
-mod xenstore;
+use xenops::*;
 
 // =============================================================================
 
-fn help() {
+fn help () {
   println!("usage:
-cargo run {{pause|unpause|shutdown}} <integer>
+xenops-cli {{pause|unpause|shutdown}} <integer>
   pause/unpause or shutdown a vm if the integer is a valid domain id.")
 }
 
 // -----------------------------------------------------------------------------
 
-fn main() {
+fn main () {
   let args: Vec<String> = env::args().collect();
 
-
-  let xs = xenstore::Xenstore::new();
+  let xs = match xenstore::Xenstore::new() {
+    Ok(xs) => xs,
+    Err(e) => {
+      eprintln!("Could not execute command: {}", e);
+      return
+    }
+  };
   let xc = match xenctrl::Xenctrl::new() {
     Ok(xc) => xc,
     Err(e) => {
-      eprintln!("Failed to get Xenctrl instance: {}", e);
+      eprintln!("Could not execute command: {}", e);
       return
     }
   };

@@ -100,6 +100,8 @@ pub struct Xenctrl {
   xc: *mut xenctrl_sys::xc_interface
 }
 
+unsafe impl Send for Xenctrl {}
+
 impl Drop for Xenctrl {
   fn drop (&mut self) {
     unsafe { xenctrl_sys::xc_interface_close(self.xc); }
@@ -110,7 +112,7 @@ impl Xenctrl {
   pub fn new () -> std::result::Result<Self, &'static str> {
     unsafe {
       let xc = xenctrl_sys::xc_interface_open(std::ptr::null_mut(), std::ptr::null_mut(), 0);
-      return if !xc.is_null() { Ok(Self { xc }) } else { Err("Failed to open xenctrl interface") };
+      if !xc.is_null() { Ok(Self { xc }) } else { Err("Failed to open xenctrl interface") }
     }
   }
 
