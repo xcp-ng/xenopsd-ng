@@ -1,5 +1,6 @@
 use enclose::enclose;
 use jsonrpc_core::{Error, ErrorCode, IoHandler, Params, Value};
+use jsonrpc_http_server::{AccessControlAllowOrigin, DomainsValidation, RestApi, ServerBuilder};
 use serde::Deserialize;
 use std::iter::FromIterator;
 use std::sync::{Arc, Mutex};
@@ -82,4 +83,13 @@ fn main () {
       Err(e) => Err(make_error(&e.to_string()))
     }
   } } );
+
+  let server = ServerBuilder::new(io)
+    .threads(2)
+    .rest_api(RestApi::Unsecure)
+    .cors(DomainsValidation::AllowOnly(vec![AccessControlAllowOrigin::Any]))
+    .start_http(&"0.0.0.0:3030".parse().unwrap()) // Any ip
+    .expect("Unable to start RPC server");
+
+  server.wait();
 }
