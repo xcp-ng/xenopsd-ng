@@ -20,7 +20,7 @@ See the [dedicated README](cli/README.md) for more details.
 
 ## Requirements
 
-Install `cargo`, `rustc` & `xen-devel`. `cland`, `gcc` and headers for `llvm` are also needed.
+Install `cargo`, `rustc` & `xen-devel`. `clang`, `gcc` and headers for `llvm` are also needed.
 
 ### On XCP-ng
 
