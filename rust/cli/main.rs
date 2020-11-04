@@ -9,7 +9,7 @@ fn help () {
 xenops-cli {{pause|unpause|shutdown}} <integer>
   pause/unpause or shutdown a vm if the integer is a valid domain id.
 xenops-cli domain-list`
-  list all domains ids.")
+  List all domains ids.")
 }
 
 // -----------------------------------------------------------------------------
