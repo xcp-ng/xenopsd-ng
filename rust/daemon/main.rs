@@ -84,31 +84,38 @@ fn main () {
   } } );
 
   // Test above methods
+  // Pause
   let mut request = r#"{"jsonrpc": "2.0", "method": "vm.pause", "params": { "dom_id": 9 }, "id": 1}"#;
 	let mut response = r#"{"jsonrpc":"2.0","result":"success","id":1}"#;
   assert_eq!(io.handle_request_sync(request), Some(response.to_owned()));
 
+  // Pause dom_id doesn't not exist
   request = r#"{"jsonrpc": "2.0", "method": "vm.pause", "params": { "dom_id": 12 }, "id": 1}"#;
   response = r#"{"jsonrpc":"2.0","error":{"code":0,"message":"-3: No such process (os error 3) ()"},"id":1}"#;
   assert_eq!(io.handle_request_sync(request), Some(response.to_owned()));
 
+  // Unpause
   request = r#"{"jsonrpc": "2.0", "method": "vm.unpause", "params": { "dom_id": 9 }, "id": 1}"#;
 	response = r#"{"jsonrpc":"2.0","result":"success","id":1}"#;
   assert_eq!(io.handle_request_sync(request), Some(response.to_owned()));
 
+  // Unpause dom_id doesn't exist
   request = r#"{"jsonrpc": "2.0", "method": "vm.unpause", "params": { "dom_id": 12 }, "id": 1}"#;
   response = r#"{"jsonrpc":"2.0","error":{"code":0,"message":"-3: No such process (os error 3) ()"},"id":1}"#;
   assert_eq!(io.handle_request_sync(request), Some(response.to_owned()));
 
+  // List domains
+  request = r#"{"jsonrpc": "2.0", "method": "host.domain-list", "id": 1}"#;
+  response = r#"{"jsonrpc":"2.0","result":[0,9],"id":1}"#;
+  assert_eq!(io.handle_request_sync(request), Some(response.to_owned()));
+
+  // Shutdown
   request = r#"{"jsonrpc": "2.0", "method": "vm.shutdown", "params": { "dom_id": 9 }, "id": 1}"#;
 	response = r#"{"jsonrpc":"2.0","result":"success","id":1}"#;
   assert_eq!(io.handle_request_sync(request), Some(response.to_owned()));
 
+  // Shutdown dom_id doesn't exist
   request = r#"{"jsonrpc": "2.0", "method": "vm.shutdown", "params": { "dom_id": 12 }, "id": 1}"#;
   response = r#"{"jsonrpc":"2.0","error":{"code":0,"message":"error"},"id":1}"#;
-  assert_eq!(io.handle_request_sync(request), Some(response.to_owned()));
-
-  request = r#"{"jsonrpc": "2.0", "method": "host.domain-list", "id": 1}"#;
-  response = r#"{"jsonrpc":"2.0","result":[0,9],"id":1}"#;
   assert_eq!(io.handle_request_sync(request), Some(response.to_owned()));
 }
