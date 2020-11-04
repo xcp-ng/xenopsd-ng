@@ -10,13 +10,13 @@ There's 2 ways to use it: the daemon/server way, or via a CLI.
 
 It's basically having `xenopsd-ng` running and listening on port `3030` for HTTP and JSON-RPC communications. You can then do your request for any host remotely with JSON-RPC calls, eg with `curl`.
 
-See the dedicated README for more details.
+See the [dedicated README](daemon/README.md) for more details.
 
 ### CLI
 
 Use calls directly without having any daemon running.
 
-See the dedicated README for more details.
+See the [dedicated README](cli/README.md) for more details.
 
 ## Requirements
 
