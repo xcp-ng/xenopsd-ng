@@ -8,7 +8,7 @@ There's 2 ways to use it: the daemon/server way, or via a CLI.
 
 ### xenopsd-ng daemon
 
-It's basically having `xenopsd-ng` running and listening on port `3030` for HTTP and JSON-RPC communications. You can then do your request for any host remotely with JSON-RPC calls, eg with `curl`.
+It's basically having `xenops-ng` running and listening on port `3030` for HTTP and JSON-RPC communications. You can then do your request for any host remotely with JSON-RPC calls, eg with `curl`.
 
 See the [dedicated README](daemon/README.md) for more details.
 
@@ -20,7 +20,7 @@ See the [dedicated README](cli/README.md) for more details.
 
 ## Requirements
 
-Install `cargo`, `rustc` & `xen-devel`.
+Install `cargo`, `rustc` & `xen-devel`. `cland`, `gcc` and headers for `llvm` are also needed.
 
 ### On XCP-ng
 
