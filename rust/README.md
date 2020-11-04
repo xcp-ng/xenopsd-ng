@@ -2,8 +2,15 @@ Basic POC based on [Wendel's rust binding of libxc](https://github.com/Wenzel/xe
 
 # Requirements
 
-Install `cargo` & `rustc`
+Install `cargo`, `rustc` & `xen-devel`
 
-# Usage
+## On XCP-ng
 
-In this folder run `cargo run {pause|unpause|shutdown} <integer>` where integer is a valid domain id.
+To install what's needed, run following commands:
+```
+yum install llvm-devel clang xen-devel --enablerepo="*"
+
+curl https://sh.rustup.rs -sSf | sh
+
+source $HOME/.cargo/env
+```
