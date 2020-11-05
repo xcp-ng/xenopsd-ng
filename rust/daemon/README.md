@@ -12,10 +12,47 @@ cargo {build|run} -p xenopsd
 ## List domains
 
 ```
-> curl -X POST -H "Content-Type: application/json" -d '{"jsonrpc": "2.0", "method": "host.domain-list", "id":123 }' <server_ip>:3030
-{"jsonrpc":"2.0","result":[0,10],"id":123}
+# curl -X POST -H "Content-Type: application/json" -d '{"jsonrpc": "2.0", "method": "host.domain-list", "id":123 }' <server_ip>:3030
+
+{"jsonrpc":"2.0","result":[{"dom_id":0,"name":"Domain-0"},{"dom_id":1,"name":"DNS Hole"},{"dom_id":3,"name":"Ubiquiti"},{"dom_id":4,"name":"FreeNAS"},{"dom_id":5,"name":"XOA"}],"id":1}
 ```
 > The result is the list of existing domain ids.
+
+You can use it with `jq` to get a prettier output:
+
+```
+# curl -s -X POST -H "Content-Type: application/json" -d '{"jsonrpc": "2.0", "method": "host.domain-list", "id":1 }' 192.168.1.17:3030 | jq
+```
+
+This will display:
+```
+{
+  "jsonrpc": "2.0",
+  "result": [
+    {
+      "dom_id": 0,
+      "name": "Domain-0"
+    },
+    {
+      "dom_id": 1,
+      "name": "DNS Hole"
+    },
+    {
+      "dom_id": 3,
+      "name": "Ubiquiti"
+    },
+    {
+      "dom_id": 4,
+      "name": "FreeNAS"
+    },
+    {
+      "dom_id": 5,
+      "name": "XOA"
+    }
+  ],
+  "id": 1
+}
+```
 
 ## Pause a domain
 
