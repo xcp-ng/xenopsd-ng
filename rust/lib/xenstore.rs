@@ -40,6 +40,56 @@ impl Xenstore {
       String::from(CStr::from_ptr(xenstore_sys::xs_get_domain_path(self.xs, dom_id)).to_str().unwrap())
     }
   }
+
+  pub fn read (&self, path: &str) -> Result<String> {
+    self.read_transaction(xenstore_sys::XBT_NULL, &path)
+  }
+
+  pub fn write (&self, path: &str, value: &str) -> Result<()> {
+    self.write_transaction(xenstore_sys::XBT_NULL, &path, &value)
+  }
+
+  pub fn rm (&self, path: &str) -> Result<()> {
+    self.rm_transaction(xenstore_sys::XBT_NULL, &path)
+  }
+
+  fn read_transaction (&self, tr: xenstore_sys::xs_transaction_t, path: &str) -> Result<String> {
+    unsafe {
+      let mut len: u32 = 0;
+      let buf = xenstore_sys::xs_read(self.xs, tr, CString::new(path).unwrap().as_ptr(), &mut len);
+      if buf.is_null() {
+        Err(Error::new())
+      } else {
+        let size = len as usize;
+        let value = match String::from_utf8(std::slice::from_raw_parts(buf as *mut u8, size).to_vec()) {
+          Ok(value) => value,
+          Err(e) => return Err(Error::new())
+        };
+        libc::free(buf);
+        Ok(value)
+      }
+    }
+  }
+
+  fn write_transaction (&self, tr: xenstore_sys::xs_transaction_t, path: &str, value: &str) -> Result<()> {
+    unsafe {
+      if xenstore_sys::xs_write(self.xs, tr, CString::new(path).unwrap().as_ptr(), value.as_ptr() as *const libc::c_void, value.len() as u32) {
+        Ok(())
+      } else {
+        Err(Error::new())
+      }
+    }
+  }
+
+  fn rm_transaction (&self, tr: xenstore_sys::xs_transaction_t, path: &str) -> Result<()> {
+    unsafe {
+      if xenstore_sys::xs_rm(self.xs, tr, CString::new(path).unwrap().as_ptr()) {
+        Ok(())
+      } else {
+        Err(Error::new())
+      }
+    }
+  }
 }
 
 impl Drop for Xenstore {
@@ -76,38 +126,15 @@ impl<'a> Transaction<'a> {
   }
 
   pub fn read (&self, path: &str) -> Result<String> {
-    unsafe {
-      let mut len: u32 = 0;
-      let buf = xenstore_sys::xs_read(self.store.xs, self.tr, CString::new(path).unwrap().as_ptr(), &mut len);
-      if buf.is_null() {
-        Err(Error::new())
-      } else {
-        let size = len as usize;
-        let value = String::from_utf8_unchecked(std::vec::Vec::from_raw_parts(buf as *mut u8, size, size));
-        libc::free(buf);
-        Ok(value)
-      }
-    }
+    self.store.read_transaction(self.tr, path)
   }
 
   pub fn write (&self, path: &str, value: &str) -> Result<()> {
-    unsafe {
-      if xenstore_sys::xs_write(self.store.xs, self.tr, CString::new(path).unwrap().as_ptr(), value.as_ptr() as *const libc::c_void, value.len() as u32) {
-        Ok(())
-      } else {
-        Err(Error::new())
-      }
-    }
+    self.store.write_transaction(self.tr, path, value)
   }
 
   pub fn rm (&self, path: &str) -> Result<()> {
-    unsafe {
-      if xenstore_sys::xs_rm(self.store.xs, self.tr, CString::new(path).unwrap().as_ptr()) {
-        Ok(())
-      } else {
-        Err(Error::new())
-      }
-    }
+    self.store.rm_transaction(self.tr, path)
   }
 
   pub fn commit (&self) -> Result<()> {

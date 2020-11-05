@@ -37,7 +37,7 @@ fn main () {
     2 => {
       let cmd = &args[1];
       match &cmd[..] {
-        "list-domains" => {
+        "domain-list" => {
           match xc.get_domain_info_list() {
             Ok(domains) => println!("domains: {:?}", domains),
             Err(e) => eprintln!("Error while listing domains: {}", e)
@@ -79,8 +79,8 @@ fn main () {
 
           // Useless but demonstrative :)
           // Find uuid from domid
-          match xc.get_domain_handle(dom_id) {
-            Ok(dom_handle) => println!("Domain UUID {}", xenctrl::get_uuid_from_domain_handle(&dom_handle)),
+          match xc.get_domain_info(dom_id) {
+            Ok(dom_info) => println!("Domain UUID {}", xenctrl::get_uuid_from_domain_handle(&dom_info.handle)),
             Err(e) => eprintln!("Failed to get domain handle: {}", e)
           };
 
