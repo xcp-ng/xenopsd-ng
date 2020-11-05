@@ -39,3 +39,7 @@ pub fn shutdown (xs: &xenstore::Xenstore, dom_id: u32, reason: ShutdownReason) -
   transaction.write(&shutdown_path, &reason.to_string())?;
   transaction.commit()
 }
+
+pub fn get_name (xs: &xenstore::Xenstore, dom_id: u32) -> xenstore::Result<String> {
+  xs.read(&(xs.get_domain_path(dom_id) + "/name"))
+}

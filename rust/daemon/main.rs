@@ -1,5 +1,5 @@
 use enclose::enclose;
-use jsonrpc_core::{Error, ErrorCode, IoHandler, Params, Value};
+use jsonrpc_core::{Error, ErrorCode, IoHandler, Params, Value, serde_json::json};
 use jsonrpc_http_server::{AccessControlAllowOrigin, DomainsValidation, RestApi, ServerBuilder};
 use serde::Deserialize;
 use std::iter::FromIterator;
@@ -37,9 +37,17 @@ fn main () {
 
   let mut io = IoHandler::new();
 
-  io.add_method("host.domain-list", enclose! { (xc) move |_: Params| {
+  io.add_method("host.domain-list", enclose! { (xc, xs) move |_: Params| {
+    let xs = xs.lock().unwrap();
     match xc.lock().unwrap().get_domain_info_list() {
-      Ok(domains) => Ok(Value::from_iter(domains.into_iter().map(|dom_info| dom_info.domain))),
+
+      Ok(domains) => Ok(Value::from_iter(domains.into_iter().filter_map(|dom_info| {
+        let name = vm::get_name(&xs, dom_info.domain.into()).ok()?;
+        Some(json!({
+          "dom_id": dom_info.domain,
+          "name": name
+        }))
+      }))),
       Err(e) => Err(make_error(&e.to_string()))
     }
   } } );
