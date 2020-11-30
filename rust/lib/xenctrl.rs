@@ -96,6 +96,10 @@ pub fn get_uuid_from_domain_handle (dom_handle: &DomainHandle) -> String {
 
 pub type DomainInfo = bindings::xen_domctl_getdomaininfo_t;
 
+// -----------------------------------------------------------------------------
+
+pub type CreateDomain = xenctrl_sys::xen_domctl_createdomain;
+
 // =============================================================================
 
 pub struct Xenctrl {
@@ -213,4 +217,15 @@ impl Xenctrl {
       }
     }
   }
+/*
+  pub fn create_domain (&self, config: CreateDomain) -> Result<u32> {
+    unsafe {
+      let mut dom_id: u32 = 0;
+      match xenctrl_sys::xc_domain_create(self.xc, &mut dom_id, config) {
+        0 => Ok(dom_id),
+        _ => Err(self.get_last_error())
+      }
+    }
+  }
+*/
 }
