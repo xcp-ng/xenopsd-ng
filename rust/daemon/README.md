@@ -2,7 +2,7 @@ HTTP server listening on port 3030 for jsonrpc request for xenops-ng.
 
 # Compile & run daemon
 
-From within the `rust` foder:
+From within the `rust` folder:
 ```
 cargo {build|run} -p xenopsd
 ```

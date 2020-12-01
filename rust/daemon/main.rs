@@ -95,7 +95,7 @@ fn main () {
   } } );
 
   io.add_method("vm.create", enclose! { (xc) move |params: Params| {
-    let create_domain: xenctrl::CreateDomain = {
+    let create_domain: &mut xenctrl::CreateDomain = {
       flags: (XEN_DOMCTL_CDF_hvm | XEN_DOMCTL_CDF_hap),
       max_vcpus: 1,
       max_evtchn_port: -1,
@@ -109,6 +109,8 @@ fn main () {
       Ok(v) => v,
       Err(e) => return Err(make_error(&e.to_string()))
     };
+
+    Ok(Value::String(String::from("success")))
   } } );
 
   let server = ServerBuilder::new(io)
