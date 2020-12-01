@@ -40,13 +40,15 @@ fn main () {
   io.add_method("host.domain-list", enclose! { (xc, xs) move |_: Params| {
     let xs = xs.lock().unwrap();
     match xc.lock().unwrap().get_domain_info_list() {
-
-      Ok(domains) => Ok(Value::from_iter(domains.into_iter().filter_map(|dom_info| {
-        let name = vm::get_name(&xs, dom_info.domain.into()).ok()?;
-        Some(json!({
+      Ok(domains) => Ok(Value::from_iter(domains.into_iter().map(|dom_info| {
+        let name = match vm::get_name(&xs, dom_info.domain.into()) {
+          Ok(vm_name) => vm_name,
+          Err(_) => String::from("(null)")
+        };
+        json!({
           "dom_id": dom_info.domain,
           "name": name
-        }))
+        })
       }))),
       Err(e) => Err(make_error(&e.to_string()))
     }
