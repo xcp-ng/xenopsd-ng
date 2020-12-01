@@ -225,7 +225,7 @@ impl Xenctrl {
 
   pub fn create_domain (&self, config: &mut CreateDomain) -> Result<u32> {
     unsafe {
-      let mut dom_id: u32 = 1;
+      let mut dom_id: u32 = u32::MAX - 1; // let xen choose the dom_id
       match xenctrl_sys::xc_domain_create(self.xc, &mut dom_id, config) {
         0 => Ok(dom_id),
         _ => Err(self.get_last_error())
