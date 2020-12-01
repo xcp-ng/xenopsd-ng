@@ -99,6 +99,11 @@ pub type DomainInfo = bindings::xen_domctl_getdomaininfo_t;
 // -----------------------------------------------------------------------------
 
 pub type CreateDomain = xenctrl_sys::xen_domctl_createdomain;
+pub const XEN_DOMCTL_CDF_hvm: u32 = xenctrl_sys::XEN_DOMCTL_CDF_hvm;
+pub const XEN_DOMCTL_CDF_hap: u32 = xenctrl_sys::XEN_DOMCTL_CDF_hap;
+
+pub type ArchDomainConfig = xenctrl_sys::xen_arch_domainconfig;
+pub const XEN_X86_EMU_LAPIC: u32 = xenctrl_sys::XEN_X86_EMU_LAPIC;
 
 // =============================================================================
 

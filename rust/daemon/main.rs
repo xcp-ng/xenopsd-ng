@@ -95,15 +95,18 @@ fn main () {
   } } );
 
   io.add_method("vm.create", enclose! { (xc) move |params: Params| {
-    let create_domain: &mut xenctrl::CreateDomain = {
-      flags: (XEN_DOMCTL_CDF_hvm | XEN_DOMCTL_CDF_hap),
+    let create_domain = &mut xenctrl::CreateDomain {
+      flags: xenctrl::XEN_DOMCTL_CDF_hvm | xenctrl::XEN_DOMCTL_CDF_hap,
       max_vcpus: 1,
-      max_evtchn_port: -1,
+      max_evtchn_port: u32::MAX, // -1 as u32
       max_grant_frames: 64,
       max_maptrack_frames: 1024,
-      arch: {
-        emulation_flags: XEN_X86_EMU_LAPIC
-      }
+      arch: xenctrl::ArchDomainConfig {
+        emulation_flags: xenctrl::XEN_X86_EMU_LAPIC
+      },
+      handle: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      iommu_opts: 0,
+      ssidref: 0
     };
     let dom_id = match xc.lock().unwrap().create_domain(create_domain) {
       Ok(v) => v,
