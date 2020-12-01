@@ -113,7 +113,7 @@ fn main () {
       Err(e) => return Err(make_error(&e.to_string()))
     };
 
-    Ok(Value::String(String::from("success")))
+    Ok(json!(dom_id))
   } } );
 
   let server = ServerBuilder::new(io)
