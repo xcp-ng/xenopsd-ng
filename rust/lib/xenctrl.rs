@@ -217,15 +217,15 @@ impl Xenctrl {
       }
     }
   }
-/*
-  pub fn create_domain (&self, config: CreateDomain) -> Result<u32> {
+
+  pub fn create_domain (&self, config: &mut CreateDomain) -> Result<u32> {
     unsafe {
-      let mut dom_id: u32 = 0;
+      let mut dom_id: u32 = 1;
       match xenctrl_sys::xc_domain_create(self.xc, &mut dom_id, config) {
         0 => Ok(dom_id),
         _ => Err(self.get_last_error())
       }
     }
   }
-*/
+
 }

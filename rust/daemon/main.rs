@@ -94,6 +94,23 @@ fn main () {
     }
   } } );
 
+  io.add_method("vm.create", enclose! { (xc) move |params: Params| {
+    let create_domain: xenctrl::CreateDomain = {
+      flags: (XEN_DOMCTL_CDF_hvm | XEN_DOMCTL_CDF_hap),
+      max_vcpus: 1,
+      max_evtchn_port: -1,
+      max_grant_frames: 64,
+      max_maptrack_frames: 1024,
+      arch: {
+        emulation_flags: XEN_X86_EMU_LAPIC
+      }
+    };
+    let dom_id = match xc.lock().unwrap().create_domain(create_domain) {
+      Ok(v) => v,
+      Err(e) => return Err(make_error(&e.to_string()))
+    };
+  } } );
+
   let server = ServerBuilder::new(io)
     .threads(2)
     .rest_api(RestApi::Unsecure)
