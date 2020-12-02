@@ -105,6 +105,31 @@ pub const XEN_DOMCTL_CDF_hap: u32 = xenctrl_sys::XEN_DOMCTL_CDF_hap;
 pub type ArchDomainConfig = xenctrl_sys::xen_arch_domainconfig;
 pub const XEN_X86_EMU_LAPIC: u32 = xenctrl_sys::XEN_X86_EMU_LAPIC;
 
+pub type HvmSaveDescriptor = xenctrl_sys::hvm_save_descriptor;
+
+// TODO: Use macros.
+// TODO: Generate direclty rust code instead using the binary helper.
+pub type HvmSaveTypeCpu = xenctrl_sys::HvmSaveTypeCPU;
+pub type HvmSaveTypeHeader = xenctrl_sys::HvmSaveTypeHEADER;
+pub type HvmSaveTypeMtrr = xenctrl_sys::HvmSaveTypeMTRR;
+pub type HvmSaveTypeEnd = xenctrl_sys::HvmSaveTypeEND;
+
+pub const HVM_SAVE_LENGTH_CPU: u32 = xenctrl_sys::HvmSaveLengthCPU as u32;
+pub const HVM_SAVE_LENGTH_HEADER: u32 = xenctrl_sys::HvmSaveLengthHEADER as u32;
+pub const HVM_SAVE_LENGTH_MTRR: u32 = xenctrl_sys::HvmSaveLengthMTRR as u32;
+pub const HVM_SAVE_LENGTH_END: u32 = xenctrl_sys::HvmSaveLengthEND as u32;
+
+pub const HVM_SAVE_CODE_CPU: u16 = xenctrl_sys::HvmSaveCodeCPU as u16;
+pub const HVM_SAVE_CODE_HEADER: u16 = xenctrl_sys::HvmSaveCodeHEADER as u16;
+pub const HVM_SAVE_CODE_MTRR: u16 = xenctrl_sys::HvmSaveCodeMTRR as u16;
+pub const HVM_SAVE_CODE_END: u16 = xenctrl_sys::HvmSaveCodeEND as u16;
+
+pub const X86_CR0_PE: u64 = 0x01;
+pub const X86_CR0_ET: u64 = 0x10;
+
+pub const X86_DR6_DEFAULT: u64 = 0xffff0ff0;
+pub const X86_DR7_DEFAULT: u64 = 0x00000400;
+
 // =============================================================================
 
 pub struct Xenctrl {
@@ -233,4 +258,98 @@ impl Xenctrl {
     }
   }
 
+  pub fn start_domain(&self, dom_id: u32) -> Result<()> {
+    // 1. Get the HVM context.
+    let context = self.get_hvm_context(dom_id)?;
+
+    // 2. Create bootstrap context.
+    #[derive(Default)]
+    struct BootstrapContext {
+      header_d: HvmSaveDescriptor,
+      header: HvmSaveTypeHeader,
+      cpu_d: HvmSaveDescriptor,
+      cpu: HvmSaveTypeCpu,
+      end_d: HvmSaveDescriptor,
+      end: HvmSaveTypeEnd
+    };
+    let mut bootstrap_buf: Vec<u8> = vec![0; std::mem::size_of::<BootstrapContext>()];
+    let mut bootstrap_context = unsafe { std::mem::transmute::<*mut u8, *mut BootstrapContext>(
+      bootstrap_buf.as_mut_ptr()
+    ) };
+
+    bootstrap_buf.copy_from_slice(&context[
+      0..(std::mem::size_of::<HvmSaveDescriptor>() + HVM_SAVE_LENGTH_HEADER as usize)
+    ]);
+
+    // 3. Set CPU descriptor.
+    unsafe {
+      (*bootstrap_context).cpu_d.typecode = HVM_SAVE_CODE_CPU;
+      (*bootstrap_context).cpu_d.instance = 0;
+      (*bootstrap_context).cpu_d.length = HVM_SAVE_LENGTH_CPU;
+
+      // 4. Set the cached part of the relevant segment registers.
+      (*bootstrap_context).cpu.cs_base = 0;
+      (*bootstrap_context).cpu.ds_base = 0;
+      (*bootstrap_context).cpu.es_base = 0;
+      (*bootstrap_context).cpu.ss_base = 0;
+      (*bootstrap_context).cpu.tr_base = 0;
+      (*bootstrap_context).cpu.cs_limit = !0;
+      (*bootstrap_context).cpu.ds_limit = !0;
+      (*bootstrap_context).cpu.es_limit = !0;
+      (*bootstrap_context).cpu.ss_limit = !0;
+      (*bootstrap_context).cpu.tr_limit = 0x67;
+      (*bootstrap_context).cpu.cs_arbytes = 0xc9b;
+      (*bootstrap_context).cpu.ds_arbytes = 0xc93;
+      (*bootstrap_context).cpu.es_arbytes = 0xc93;
+      (*bootstrap_context).cpu.ss_arbytes = 0xc93;
+      (*bootstrap_context).cpu.tr_arbytes = 0x8b;
+
+      // 5. Set the control registers.
+      (*bootstrap_context).cpu.cr0 = X86_CR0_PE | X86_CR0_ET;
+
+      // 6. Set the GPRs.
+      (*bootstrap_context).cpu.rip = 1 << 20;
+
+      (*bootstrap_context).cpu.dr6 = X86_DR6_DEFAULT;
+      (*bootstrap_context).cpu.dr7 = X86_DR7_DEFAULT;
+
+      // TODO: Is it useful?
+      // if ( dom->start_info_seg.pfn )
+      //     bsp_ctx.cpu.rbx = dom->start_info_seg.pfn << PAGE_SHIFT;
+
+      // 7. Set the end descriptor.
+      (*bootstrap_context).end_d.typecode = HVM_SAVE_CODE_END;
+      (*bootstrap_context).end_d.instance = 0;
+      (*bootstrap_context).end_d.length = HVM_SAVE_LENGTH_END;
+    }
+
+    // 8. Set context and boot.
+    self.set_hvm_context(dom_id, &bootstrap_buf)?;
+    self.unpause_domain(dom_id)
+  }
+
+  pub fn get_hvm_context (&self, dom_id: u32) -> Result<Vec<u8>> {
+    let mut context = Vec::<u8>::new();
+    unsafe {
+      let size = xenctrl_sys::xc_domain_hvm_getcontext(self.xc, dom_id, std::ptr::null_mut(), 0);
+      if size <= 0 {
+        return Err(self.get_last_error()); // TODO.
+      }
+
+      context.resize(size as usize, 0);
+      if xenctrl_sys::xc_domain_hvm_getcontext(self.xc, dom_id, context.as_mut_ptr(), size as u32) <= 0 {
+        return Err(self.get_last_error()); // TODO.
+      }
+    }
+    Ok(context)
+  }
+
+  pub fn set_hvm_context (&self, dom_id: u32, context: &Vec<u8>) -> Result<()> { // TODO: context should be const.
+    unsafe {
+      match xenctrl_sys::xc_domain_hvm_setcontext(self.xc, dom_id, context.as_ptr() as *mut u8, context.len() as u32) {
+        0 => Ok(()),
+        _ => Err(self.get_last_error())
+      }
+    }
+  }
 }
