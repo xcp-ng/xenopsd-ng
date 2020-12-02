@@ -281,8 +281,8 @@ impl Xenctrl {
       0..(std::mem::size_of::<HvmSaveDescriptor>() + HVM_SAVE_LENGTH_HEADER as usize)
     ]);
 
-    // 3. Set CPU descriptor.
     unsafe {
+      // 3. Set CPU descriptor.
       (*bootstrap_context).cpu_d.typecode = HVM_SAVE_CODE_CPU;
       (*bootstrap_context).cpu_d.instance = 0;
       (*bootstrap_context).cpu_d.length = HVM_SAVE_LENGTH_CPU;
@@ -350,6 +350,45 @@ impl Xenctrl {
         0 => Ok(()),
         _ => Err(self.get_last_error())
       }
+    }
+  }
+
+  pub fn populate_physmap_exact_domain (
+    &self,
+    dom_id: u32,
+    extent_order: u32,
+    mem_flags: u32,
+    extents: &mut Vec<u64>
+  ) -> Result<()> {
+    unsafe {
+      match xenctrl_sys::xc_domain_populate_physmap_exact(
+        self.xc,
+        dom_id,
+        extents.len() as u64,
+        extent_order,
+        mem_flags, extents.as_mut_ptr()
+      ) {
+        0 => Ok(()),
+        _ => Err(self.get_last_error())
+      }
+    }
+  }
+
+  pub fn foreign_memory_map (&self, dom_id: u32, prot: i32, arr: Vec<u64>, num: usize) -> Result<*mut libc::c_void> {
+    unsafe {
+      let ret = xenctrl_sys::xenforeignmemory_map(
+        xenctrl_sys::xc_interface_fmem_handle(self.xc),
+        dom_id,
+        prot,
+        num,
+        arr.as_ptr(),
+        std::ptr::null_mut()
+      );
+      if ret.is_null() {
+        return Err(self.get_last_error())
+      }
+
+      Ok(ret)
     }
   }
 }
