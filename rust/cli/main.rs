@@ -15,8 +15,6 @@ xenops-cli domain-list`
 // -----------------------------------------------------------------------------
 
 fn main () {
-  let c = xenops::domain_config::Config::new();
-  c.read_from_path("/home/benjamin/test-hvm64-example.cfg");
   let args: Vec<String> = env::args().collect();
 
   let xs = match xenstore::Xenstore::new() {
