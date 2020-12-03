@@ -110,23 +110,6 @@ pub const XEN_X86_EMU_LAPIC: u32 = bindings::XEN_X86_EMU_LAPIC;
 
 pub type HvmSaveDescriptor = bindings::hvm_save_descriptor;
 
-// TODO: Use macros.
-// TODO: Generate direclty rust code instead using the binary helper.
-pub type HvmSaveTypeCpu = bindings::HvmSaveTypeCPU;
-pub type HvmSaveTypeHeader = bindings::HvmSaveTypeHEADER;
-pub type HvmSaveTypeMtrr = bindings::HvmSaveTypeMTRR;
-pub type HvmSaveTypeEnd = bindings::HvmSaveTypeEND;
-
-pub const HVM_SAVE_LENGTH_CPU: u32 = bindings::HvmSaveLengthCPU as u32;
-pub const HVM_SAVE_LENGTH_HEADER: u32 = bindings::HvmSaveLengthHEADER as u32;
-pub const HVM_SAVE_LENGTH_MTRR: u32 = bindings::HvmSaveLengthMTRR as u32;
-pub const HVM_SAVE_LENGTH_END: u32 = bindings::HvmSaveLengthEND as u32;
-
-pub const HVM_SAVE_CODE_CPU: u16 = bindings::HvmSaveCodeCPU as u16;
-pub const HVM_SAVE_CODE_HEADER: u16 = bindings::HvmSaveCodeHEADER as u16;
-pub const HVM_SAVE_CODE_MTRR: u16 = bindings::HvmSaveCodeMTRR as u16;
-pub const HVM_SAVE_CODE_END: u16 = bindings::HvmSaveCodeEND as u16;
-
 pub const X86_CR0_PE: u64 = 0x01;
 pub const X86_CR0_ET: u64 = 0x10;
 
@@ -297,11 +280,11 @@ impl Xenctrl {
     #[derive(Default)]
     struct BootstrapContext {
       header_d: HvmSaveDescriptor,
-      header: HvmSaveTypeHeader,
+      header: bindings::HvmSaveTypeHeader,
       cpu_d: HvmSaveDescriptor,
-      cpu: HvmSaveTypeCpu,
+      cpu: bindings::HvmSaveTypeCpu,
       end_d: HvmSaveDescriptor,
-      end: HvmSaveTypeEnd
+      end: bindings::HvmSaveTypeEnd
     };
     let mut bootstrap_buf: Vec<u8> = vec![0; std::mem::size_of::<BootstrapContext>()];
     let mut bootstrap_context = unsafe { std::mem::transmute::<*mut u8, *mut BootstrapContext>(
@@ -309,14 +292,14 @@ impl Xenctrl {
     ) };
 
     bootstrap_buf.copy_from_slice(&context[
-      0..(std::mem::size_of::<HvmSaveDescriptor>() + HVM_SAVE_LENGTH_HEADER as usize)
+      0..(std::mem::size_of::<HvmSaveDescriptor>() + bindings::HVM_SAVE_LENGTH_HEADER as usize)
     ]);
 
     unsafe {
       // 3. Set CPU descriptor.
-      (*bootstrap_context).cpu_d.typecode = HVM_SAVE_CODE_CPU;
+      (*bootstrap_context).cpu_d.typecode = bindings::HVM_SAVE_CODE_CPU;
       (*bootstrap_context).cpu_d.instance = 0;
-      (*bootstrap_context).cpu_d.length = HVM_SAVE_LENGTH_CPU;
+      (*bootstrap_context).cpu_d.length = bindings::HVM_SAVE_LENGTH_CPU;
 
       // 4. Set the cached part of the relevant segment registers.
       (*bootstrap_context).cpu.cs_base = 0;
@@ -349,9 +332,9 @@ impl Xenctrl {
       //     bsp_ctx.cpu.rbx = dom->start_info_seg.pfn << PAGE_SHIFT;
 
       // 7. Set the end descriptor.
-      (*bootstrap_context).end_d.typecode = HVM_SAVE_CODE_END;
+      (*bootstrap_context).end_d.typecode = bindings::HVM_SAVE_CODE_END;
       (*bootstrap_context).end_d.instance = 0;
-      (*bootstrap_context).end_d.length = HVM_SAVE_LENGTH_END;
+      (*bootstrap_context).end_d.length = bindings::HVM_SAVE_LENGTH_END;
     }
 
     // 8. Set context and boot.

@@ -1,4 +1,5 @@
 #include <xenctrl.h>
+#include <xenforeignmemory.h>
 #include <xenstore.h>
 
 // Workaround to wrap HvmSaveTypes.
