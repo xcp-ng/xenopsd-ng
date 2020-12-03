@@ -4,7 +4,7 @@
 #![allow(non_upper_case_globals)]
 
 mod bindings {
-  include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+  include!(concat!(env!("OUT_DIR"), "/wrapper/bindings.rs"));
 }
 
 pub use bindings::*;
