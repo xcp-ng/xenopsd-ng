@@ -356,7 +356,8 @@ impl Xenctrl {
 
     // 8. Set context and boot.
     self.set_hvm_context(dom_id, &bootstrap_buf)?;
-    self.unpause_domain(dom_id)
+    self.unpause_domain(dom_id)?;
+    self.foreign_memory_unmap(ptr, 16) // TODO use ram length?
   }
 
   pub fn get_hvm_context (&self, dom_id: u32) -> Result<Vec<u8>> {
