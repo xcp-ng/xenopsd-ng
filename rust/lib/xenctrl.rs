@@ -284,7 +284,7 @@ impl Xenctrl {
       Err(e) => return Err(Error::new(ErrorCode::None, "file open")) // TODO
     };
     unsafe {
-      let mut mmap = match Mmap::map(&image) {
+      let mmap = match Mmap::map(&image) {
         Ok(mmap) => mmap,
         Err(e) => return Err(Error::new(ErrorCode::None, "mmap")) // TODO
       };
