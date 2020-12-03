@@ -6,6 +6,7 @@ const WRAPPER: &str = "lib/wrapper.h";
 fn main () {
   println!("cargo:rerun-if-changed={}", WRAPPER);
   println!("cargo:rustc-link-lib={}={}", "dylib", "xenctrl");
+  println!("cargo:rustc-link-lib={}={}", "dylib", "xenstore");
 
   let bindings = bindgen::Builder::default()
     .header(WRAPPER)
