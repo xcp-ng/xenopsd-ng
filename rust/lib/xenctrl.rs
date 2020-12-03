@@ -251,10 +251,14 @@ impl Xenctrl {
     }
   }
 
-  pub fn start_domain(&self, dom_id: u32, image_path: &str) -> Result<()> {
+  pub fn start_domain (&self, dom_id: u32, image_path: &str) -> Result<()> {
+    self.set_max_vcpus_domain(dom_id, 1);
+    self.set_max_mem_domain(dom_id, u64::MAX);
+
     // Get foreign memory pages
+    let length = 16;
     let mut ram: Vec<XenPfn> = vec!();
-    ram.resize(16, 0);
+    ram.resize(length, 0);
     println!("POPULATE PHYSMAP EXACT DOMAIN");
     self.populate_physmap_exact_domain(dom_id, 0, 0, &mut ram)?;
 
@@ -354,10 +358,8 @@ impl Xenctrl {
     println!("UNPAUSE DOMAIN");
     self.unpause_domain(dom_id)?;
 
-    std::thread::sleep_ms(5000);
     println!("UNMAP");
-
-    self.foreign_memory_unmap(ptr, 16 * bindings::XC_PAGE_SIZE as u64) // TODO use ram length?
+    self.foreign_memory_unmap(ptr, length as u64) // TODO use ram length?
   }
 
   pub fn get_hvm_context (&self, dom_id: u32) -> Result<Vec<u8>> {
@@ -390,6 +392,24 @@ impl Xenctrl {
     }
   }
 
+  pub fn set_max_vcpus_domain (&self, dom_id: u32, vcpus: u32) -> Result<()> {
+    unsafe {
+      match bindings::xc_domain_max_vcpus(self.xc, dom_id, vcpus) {
+        0 => Ok(()),
+        _ => Err(self.get_last_error())
+      }
+    }
+  }
+
+  pub fn set_max_mem_domain (&self, dom_id: u32, max_mem: u64) -> Result<()> {
+    unsafe {
+      match bindings::xc_domain_setmaxmem(self.xc, dom_id, max_mem) {
+        0 => Ok(()),
+        _ => Err(self.get_last_error())
+      }
+    }
+  }
+
   pub fn populate_physmap_exact_domain (
     &self,
     dom_id: u32,
@@ -398,15 +418,6 @@ impl Xenctrl {
     extents: &mut Vec<XenPfn>
   ) -> Result<()> {
     unsafe {
-      // TODO: Move me in another function.
-      if bindings::xc_domain_max_vcpus(self.xc, dom_id, 1) != 0 {
-        return Err(self.get_last_error());
-      }
-      println!("SET MAX MEM");
-      if bindings::xc_domain_setmaxmem(self.xc, dom_id, u64::MAX) != 0 {
-        return Err(self.get_last_error());
-      }
-
       println!("RAM LEN {}", extents.len());
       match bindings::xc_domain_populate_physmap_exact(
         self.xc,
