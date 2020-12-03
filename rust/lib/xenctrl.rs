@@ -4,6 +4,9 @@ use uuid::Uuid;
 use super::bindings;
 use super::bindings::xc_error_code;
 
+use memmap::Mmap;
+use std::fs::File;
+
 // =============================================================================
 
 macro_rules! DefErrorCode {
@@ -129,6 +132,9 @@ pub const X86_CR0_ET: u64 = 0x10;
 
 pub const X86_DR6_DEFAULT: u64 = 0xffff0ff0;
 pub const X86_DR7_DEFAULT: u64 = 0x00000400;
+
+pub const PROT_READ: i32 = libc::PROT_READ;
+pub const PROT_WRITE: i32 = libc::PROT_WRITE;
 
 // =============================================================================
 
@@ -258,9 +264,34 @@ impl Xenctrl {
     }
   }
 
-  pub fn start_domain(&self, dom_id: u32) -> Result<()> {
+  pub fn start_domain(&self, dom_id: u32, image_path: &str) -> Result<()> {
     // 1. Get the HVM context.
     let context = self.get_hvm_context(dom_id)?;
+
+    // Get foreign memory pages
+    let mut ram: Vec<u64> = Vec::<u64>::new();
+    ram.resize(16, 0);
+    self.populate_physmap_exact_domain(dom_id, 0, 0, &mut ram)?;
+
+    let ptr = match self.foreign_memory_map(dom_id, PROT_READ | PROT_WRITE, ram) {
+      Ok(ptr) => ptr,
+      Err(e) => return Err(e)
+    };
+
+    // Open image
+    let image = match File::open(image_path) {
+      Ok(img) => img,
+      Err(e) => return Err(Error::new(ErrorCode::None, "file open")) // TODO
+    };
+    unsafe {
+      let mut mmap = match Mmap::map(&image) {
+        Ok(mmap) => mmap,
+        Err(e) => return Err(Error::new(ErrorCode::None, "mmap")) // TODO
+      };
+
+      // Copy image in foreing pages
+      std::ptr::copy_nonoverlapping(mmap.as_ptr(), ptr as *mut u8, mmap.len());
+    }
 
     // 2. Create bootstrap context.
     #[derive(Default)]
@@ -374,13 +405,13 @@ impl Xenctrl {
     }
   }
 
-  pub fn foreign_memory_map (&self, dom_id: u32, prot: i32, arr: Vec<u64>, num: usize) -> Result<*mut libc::c_void> {
+  pub fn foreign_memory_map (&self, dom_id: u32, prot: i32, arr: Vec<u64>) -> Result<*mut libc::c_void> {
     unsafe {
       let ret = xenctrl_sys::xenforeignmemory_map(
         xenctrl_sys::xc_interface_fmem_handle(self.xc),
         dom_id,
         prot,
-        num,
+        arr.len(),
         arr.as_ptr(),
         std::ptr::null_mut()
       );
@@ -389,6 +420,19 @@ impl Xenctrl {
       }
 
       Ok(ret)
+    }
+  }
+
+  pub fn foreign_memory_unmap (&self, addr: *mut libc::c_void, size: usize) -> Result<()> {
+    unsafe {
+      match xenctrl_sys::xenforeignmemory_unmap(
+        xenctrl_sys::xc_interface_fmem_handle(self.xc),
+        addr,
+        size
+      ) {
+        0 => Ok(()),
+        _ => Err(self.get_last_error())
+      }
     }
   }
 }

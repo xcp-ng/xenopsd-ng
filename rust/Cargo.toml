@@ -11,6 +11,7 @@ build = "build.rs"
 
 [dependencies]
 libc = "0.2.80"
+memmap = "0.7.0"
 rust-ini = "0.16.0"
 serde = { version = "1.0" }
 uuid = "0.6.5"
