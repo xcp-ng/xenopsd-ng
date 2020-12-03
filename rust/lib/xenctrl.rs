@@ -101,31 +101,31 @@ pub type DomainInfo = bindings::xen_domctl_getdomaininfo_t;
 
 // -----------------------------------------------------------------------------
 
-pub type CreateDomain = xenctrl_sys::xen_domctl_createdomain;
-pub const XEN_DOMCTL_CDF_hvm: u32 = xenctrl_sys::XEN_DOMCTL_CDF_hvm;
-pub const XEN_DOMCTL_CDF_hap: u32 = xenctrl_sys::XEN_DOMCTL_CDF_hap;
+pub type CreateDomain = bindings::xen_domctl_createdomain;
+pub const XEN_DOMCTL_CDF_hvm: u32 = bindings::XEN_DOMCTL_CDF_hvm;
+pub const XEN_DOMCTL_CDF_hap: u32 = bindings::XEN_DOMCTL_CDF_hap;
 
-pub type ArchDomainConfig = xenctrl_sys::xen_arch_domainconfig;
-pub const XEN_X86_EMU_LAPIC: u32 = xenctrl_sys::XEN_X86_EMU_LAPIC;
+pub type ArchDomainConfig = bindings::xen_arch_domainconfig;
+pub const XEN_X86_EMU_LAPIC: u32 = bindings::XEN_X86_EMU_LAPIC;
 
-pub type HvmSaveDescriptor = xenctrl_sys::hvm_save_descriptor;
+pub type HvmSaveDescriptor = bindings::hvm_save_descriptor;
 
 // TODO: Use macros.
 // TODO: Generate direclty rust code instead using the binary helper.
-pub type HvmSaveTypeCpu = xenctrl_sys::HvmSaveTypeCPU;
-pub type HvmSaveTypeHeader = xenctrl_sys::HvmSaveTypeHEADER;
-pub type HvmSaveTypeMtrr = xenctrl_sys::HvmSaveTypeMTRR;
-pub type HvmSaveTypeEnd = xenctrl_sys::HvmSaveTypeEND;
+pub type HvmSaveTypeCpu = bindings::HvmSaveTypeCPU;
+pub type HvmSaveTypeHeader = bindings::HvmSaveTypeHEADER;
+pub type HvmSaveTypeMtrr = bindings::HvmSaveTypeMTRR;
+pub type HvmSaveTypeEnd = bindings::HvmSaveTypeEND;
 
-pub const HVM_SAVE_LENGTH_CPU: u32 = xenctrl_sys::HvmSaveLengthCPU as u32;
-pub const HVM_SAVE_LENGTH_HEADER: u32 = xenctrl_sys::HvmSaveLengthHEADER as u32;
-pub const HVM_SAVE_LENGTH_MTRR: u32 = xenctrl_sys::HvmSaveLengthMTRR as u32;
-pub const HVM_SAVE_LENGTH_END: u32 = xenctrl_sys::HvmSaveLengthEND as u32;
+pub const HVM_SAVE_LENGTH_CPU: u32 = bindings::HvmSaveLengthCPU as u32;
+pub const HVM_SAVE_LENGTH_HEADER: u32 = bindings::HvmSaveLengthHEADER as u32;
+pub const HVM_SAVE_LENGTH_MTRR: u32 = bindings::HvmSaveLengthMTRR as u32;
+pub const HVM_SAVE_LENGTH_END: u32 = bindings::HvmSaveLengthEND as u32;
 
-pub const HVM_SAVE_CODE_CPU: u16 = xenctrl_sys::HvmSaveCodeCPU as u16;
-pub const HVM_SAVE_CODE_HEADER: u16 = xenctrl_sys::HvmSaveCodeHEADER as u16;
-pub const HVM_SAVE_CODE_MTRR: u16 = xenctrl_sys::HvmSaveCodeMTRR as u16;
-pub const HVM_SAVE_CODE_END: u16 = xenctrl_sys::HvmSaveCodeEND as u16;
+pub const HVM_SAVE_CODE_CPU: u16 = bindings::HvmSaveCodeCPU as u16;
+pub const HVM_SAVE_CODE_HEADER: u16 = bindings::HvmSaveCodeHEADER as u16;
+pub const HVM_SAVE_CODE_MTRR: u16 = bindings::HvmSaveCodeMTRR as u16;
+pub const HVM_SAVE_CODE_END: u16 = bindings::HvmSaveCodeEND as u16;
 
 pub const X86_CR0_PE: u64 = 0x01;
 pub const X86_CR0_ET: u64 = 0x10;
@@ -257,7 +257,7 @@ impl Xenctrl {
   pub fn create_domain (&self, config: &mut CreateDomain) -> Result<u32> {
     unsafe {
       let mut dom_id: u32 = u32::MAX - 1; // let xen choose the dom_id
-      match xenctrl_sys::xc_domain_create(self.xc, &mut dom_id, config) {
+      match bindings::xc_domain_create(self.xc, &mut dom_id, config) {
         0 => Ok(dom_id),
         _ => Err(self.get_last_error())
       }
@@ -363,13 +363,13 @@ impl Xenctrl {
   pub fn get_hvm_context (&self, dom_id: u32) -> Result<Vec<u8>> {
     let mut context = Vec::<u8>::new();
     unsafe {
-      let size = xenctrl_sys::xc_domain_hvm_getcontext(self.xc, dom_id, std::ptr::null_mut(), 0);
+      let size = bindings::xc_domain_hvm_getcontext(self.xc, dom_id, std::ptr::null_mut(), 0);
       if size <= 0 {
         return Err(self.get_last_error()); // TODO.
       }
 
       context.resize(size as usize, 0);
-      if xenctrl_sys::xc_domain_hvm_getcontext(self.xc, dom_id, context.as_mut_ptr(), size as u32) <= 0 {
+      if bindings::xc_domain_hvm_getcontext(self.xc, dom_id, context.as_mut_ptr(), size as u32) <= 0 {
         return Err(self.get_last_error()); // TODO.
       }
     }
@@ -378,7 +378,7 @@ impl Xenctrl {
 
   pub fn set_hvm_context (&self, dom_id: u32, context: &Vec<u8>) -> Result<()> { // TODO: context should be const.
     unsafe {
-      match xenctrl_sys::xc_domain_hvm_setcontext(self.xc, dom_id, context.as_ptr() as *mut u8, context.len() as u32) {
+      match bindings::xc_domain_hvm_setcontext(self.xc, dom_id, context.as_ptr() as *mut u8, context.len() as u32) {
         0 => Ok(()),
         _ => Err(self.get_last_error())
       }
@@ -393,7 +393,7 @@ impl Xenctrl {
     extents: &mut Vec<u64>
   ) -> Result<()> {
     unsafe {
-      match xenctrl_sys::xc_domain_populate_physmap_exact(
+      match bindings::xc_domain_populate_physmap_exact(
         self.xc,
         dom_id,
         extents.len() as u64,
@@ -408,11 +408,11 @@ impl Xenctrl {
 
   pub fn foreign_memory_map (&self, dom_id: u32, prot: i32, arr: Vec<u64>) -> Result<*mut libc::c_void> {
     unsafe {
-      let ret = xenctrl_sys::xenforeignmemory_map(
-        xenctrl_sys::xc_interface_fmem_handle(self.xc),
+      let ret = bindings::xenforeignmemory_map(
+        bindings::xc_interface_fmem_handle(self.xc),
         dom_id,
         prot,
-        arr.len(),
+        arr.len() as u64,
         arr.as_ptr(),
         std::ptr::null_mut()
       );
@@ -424,10 +424,10 @@ impl Xenctrl {
     }
   }
 
-  pub fn foreign_memory_unmap (&self, addr: *mut libc::c_void, size: usize) -> Result<()> {
+  pub fn foreign_memory_unmap (&self, addr: *mut libc::c_void, size: u64) -> Result<()> {
     unsafe {
-      match xenctrl_sys::xenforeignmemory_unmap(
-        xenctrl_sys::xc_interface_fmem_handle(self.xc),
+      match bindings::xenforeignmemory_unmap(
+        bindings::xc_interface_fmem_handle(self.xc),
         addr,
         size
       ) {

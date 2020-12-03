@@ -54,6 +54,7 @@ fn main () {
   println!("cargo:rerun-if-changed={}", &wrapper_file);
   println!("cargo:rerun-if-changed={}/{}", "wrapper", GEN_HVM_SAVE_VARIABLES_BIN);
   println!("cargo:rustc-link-lib={}={}", "dylib", "xenctrl");
+  println!("cargo:rustc-link-lib={}={}", "dylib", "xenforeignmemory");
   println!("cargo:rustc-link-lib={}={}", "dylib", "xenstore");
 
   let bindings = bindgen::Builder::default()
