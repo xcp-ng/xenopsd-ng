@@ -95,6 +95,12 @@ fn main () {
   } } );
 
   io.add_method("vm.create", enclose! { (xc) move |params: Params| {
+    #[derive(Deserialize)]
+    struct VmShutdownParams {
+      image_path: String
+    }
+
+    let parsed: VmShutdownParams = params.parse()?;
     let create_domain = &mut xenctrl::CreateDomain {
       flags: xenctrl::XEN_DOMCTL_CDF_hvm | xenctrl::XEN_DOMCTL_CDF_hap,
       max_vcpus: 1,
@@ -113,7 +119,10 @@ fn main () {
       Err(e) => return Err(make_error(&e.to_string()))
     };
 
-    Ok(json!(dom_id))
+    match xc.lock().unwrap().start_domain(dom_id, &parsed.image_path) {
+      Ok(_) => Ok(json!(dom_id)),
+      Err(e) => Err(make_error(&e.to_string()))
+    }
   } } );
 
   let server = ServerBuilder::new(io)
