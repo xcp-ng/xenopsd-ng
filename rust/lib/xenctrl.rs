@@ -119,6 +119,10 @@ pub const X86_DR7_DEFAULT: u64 = 0x00000400;
 pub const PROT_READ: i32 = libc::PROT_READ;
 pub const PROT_WRITE: i32 = libc::PROT_WRITE;
 
+// -----------------------------------------------------------------------------
+
+pub type XenPfn = bindings::xen_pfn_t;
+
 // =============================================================================
 
 pub struct Xenctrl {
@@ -248,15 +252,14 @@ impl Xenctrl {
   }
 
   pub fn start_domain(&self, dom_id: u32, image_path: &str) -> Result<()> {
-    // 1. Get the HVM context.
-    let context = self.get_hvm_context(dom_id)?;
-
     // Get foreign memory pages
-    let mut ram: Vec<u64> = Vec::<u64>::new();
+    let mut ram: Vec<XenPfn> = vec!();
     ram.resize(16, 0);
+    println!("POPULATE PHYSMAP EXACT DOMAIN");
     self.populate_physmap_exact_domain(dom_id, 0, 0, &mut ram)?;
 
-    let ptr = match self.foreign_memory_map(dom_id, PROT_READ | PROT_WRITE, ram) {
+    println!("FOREIGN MEMORY MAP");
+    let ptr = match self.foreign_memory_map(dom_id, PROT_READ | PROT_WRITE, &ram) {
       Ok(ptr) => ptr,
       Err(e) => return Err(e)
     };
@@ -276,6 +279,11 @@ impl Xenctrl {
       std::ptr::copy_nonoverlapping(mmap.as_ptr(), ptr as *mut u8, mmap.len());
     }
 
+    // 1. Get the HVM context.
+    println!("GET HVM CONTEXT {}", dom_id);
+    let context = self.get_hvm_context(dom_id)?;
+    println!("POPULATE RAM");
+
     // 2. Create bootstrap context.
     #[derive(Default)]
     struct BootstrapContext {
@@ -291,8 +299,11 @@ impl Xenctrl {
       bootstrap_buf.as_mut_ptr()
     ) };
 
-    bootstrap_buf.copy_from_slice(&context[
-      0..(std::mem::size_of::<HvmSaveDescriptor>() + bindings::HVM_SAVE_LENGTH_HEADER as usize)
+    println!("COPY FROM SLICE");
+    let bootstrap_size = (std::mem::size_of::<HvmSaveDescriptor>() + bindings::HVM_SAVE_LENGTH_HEADER as usize);
+
+    bootstrap_buf[0..bootstrap_size].copy_from_slice(&context[
+      0..bootstrap_size
     ]);
 
     unsafe {
@@ -338,28 +349,39 @@ impl Xenctrl {
     }
 
     // 8. Set context and boot.
+    println!("SET HVM CONTEXT");
     self.set_hvm_context(dom_id, &bootstrap_buf)?;
+    println!("UNPAUSE DOMAIN");
     self.unpause_domain(dom_id)?;
-    self.foreign_memory_unmap(ptr, 16) // TODO use ram length?
+
+    std::thread::sleep_ms(5000);
+    println!("UNMAP");
+
+    self.foreign_memory_unmap(ptr, 16 * bindings::XC_PAGE_SIZE as u64) // TODO use ram length?
   }
 
   pub fn get_hvm_context (&self, dom_id: u32) -> Result<Vec<u8>> {
     let mut context = Vec::<u8>::new();
     unsafe {
+      println!("GET HVM CONTEXT SIZE");
       let size = bindings::xc_domain_hvm_getcontext(self.xc, dom_id, std::ptr::null_mut(), 0);
       if size <= 0 {
         return Err(self.get_last_error()); // TODO.
       }
 
       context.resize(size as usize, 0);
+
+      println!("GET HVM CONTEXT BUF");
       if bindings::xc_domain_hvm_getcontext(self.xc, dom_id, context.as_mut_ptr(), size as u32) <= 0 {
         return Err(self.get_last_error()); // TODO.
       }
     }
+    println!("RETURN from get context");
+
     Ok(context)
   }
 
-  pub fn set_hvm_context (&self, dom_id: u32, context: &Vec<u8>) -> Result<()> { // TODO: context should be const.
+  pub fn set_hvm_context (&self, dom_id: u32, context: &Vec<u8>) -> Result<()> {
     unsafe {
       match bindings::xc_domain_hvm_setcontext(self.xc, dom_id, context.as_ptr() as *mut u8, context.len() as u32) {
         0 => Ok(()),
@@ -373,15 +395,26 @@ impl Xenctrl {
     dom_id: u32,
     extent_order: u32,
     mem_flags: u32,
-    extents: &mut Vec<u64>
+    extents: &mut Vec<XenPfn>
   ) -> Result<()> {
     unsafe {
+      // TODO: Move me in another function.
+      if bindings::xc_domain_max_vcpus(self.xc, dom_id, 1) != 0 {
+        return Err(self.get_last_error());
+      }
+      println!("SET MAX MEM");
+      if bindings::xc_domain_setmaxmem(self.xc, dom_id, u64::MAX) != 0 {
+        return Err(self.get_last_error());
+      }
+
+      println!("RAM LEN {}", extents.len());
       match bindings::xc_domain_populate_physmap_exact(
         self.xc,
         dom_id,
         extents.len() as u64,
         extent_order,
-        mem_flags, extents.as_mut_ptr()
+        mem_flags,
+        extents.as_mut_ptr()
       ) {
         0 => Ok(()),
         _ => Err(self.get_last_error())
@@ -389,7 +422,7 @@ impl Xenctrl {
     }
   }
 
-  pub fn foreign_memory_map (&self, dom_id: u32, prot: i32, arr: Vec<u64>) -> Result<*mut libc::c_void> {
+  pub fn foreign_memory_map (&self, dom_id: u32, prot: i32, arr: &Vec<XenPfn>) -> Result<*mut libc::c_void> {
     unsafe {
       let ret = bindings::xenforeignmemory_map(
         bindings::xc_interface_fmem_handle(self.xc),

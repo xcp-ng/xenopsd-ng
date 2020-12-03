@@ -52,7 +52,7 @@ fn main () {
   let wrapper_file = WRAPPER_DIR.to_string() + "/" + WRAPPER_C_HEADER;
 
   println!("cargo:rerun-if-changed={}", &wrapper_file);
-  println!("cargo:rerun-if-changed={}/{}", "wrapper", GEN_HVM_SAVE_VARIABLES_BIN);
+  println!("cargo:rerun-if-changed={}/{}.c", "wrapper", GEN_HVM_SAVE_VARIABLES_BIN);
   println!("cargo:rustc-link-lib={}={}", "dylib", "xenctrl");
   println!("cargo:rustc-link-lib={}={}", "dylib", "xenforeignmemory");
   println!("cargo:rustc-link-lib={}={}", "dylib", "xenstore");
