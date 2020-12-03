@@ -1,6 +1,8 @@
 use std::ffi::CStr;
 use uuid::Uuid;
-use xenctrl_sys::xc_error_code;
+
+use super::bindings;
+use super::bindings::xc_error_code;
 
 // =============================================================================
 
@@ -65,7 +67,7 @@ impl std::fmt::Display for Error {
       0 => String::from("Empty error"),
       n if n > 0 => {
         unsafe {
-          let description = xenctrl_sys::xc_error_code_to_desc(n);
+          let description = bindings::xc_error_code_to_desc(n);
           if description.is_null() {
             String::from("Unknown error")
           } else {
@@ -84,7 +86,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 // -----------------------------------------------------------------------------
 
-type DomainHandle = xenctrl_sys::xen_domain_handle_t;
+type DomainHandle = bindings::xen_domain_handle_t;
 
 pub fn get_uuid_from_domain_handle (dom_handle: &DomainHandle) -> String {
   Uuid::from_bytes(dom_handle).unwrap().to_string()
@@ -92,26 +94,26 @@ pub fn get_uuid_from_domain_handle (dom_handle: &DomainHandle) -> String {
 
 // -----------------------------------------------------------------------------
 
-pub type DomainInfo = xenctrl_sys::xen_domctl_getdomaininfo_t;
+pub type DomainInfo = bindings::xen_domctl_getdomaininfo_t;
 
 // =============================================================================
 
 pub struct Xenctrl {
-  xc: *mut xenctrl_sys::xc_interface
+  xc: *mut bindings::xc_interface
 }
 
 unsafe impl Send for Xenctrl {}
 
 impl Drop for Xenctrl {
   fn drop (&mut self) {
-    unsafe { xenctrl_sys::xc_interface_close(self.xc); }
+    unsafe { bindings::xc_interface_close(self.xc); }
   }
 }
 
 impl Xenctrl {
   pub fn new () -> std::result::Result<Self, &'static str> {
     unsafe {
-      let xc = xenctrl_sys::xc_interface_open(std::ptr::null_mut(), std::ptr::null_mut(), 0);
+      let xc = bindings::xc_interface_open(std::ptr::null_mut(), std::ptr::null_mut(), 0);
       if !xc.is_null() { Ok(Self { xc }) } else { Err("Failed to open xenctrl interface") }
     }
   }
@@ -119,7 +121,7 @@ impl Xenctrl {
   pub fn get_domain_info (&self, dom_id: u32) -> Result<DomainInfo> {
     unsafe {
       let mut info: DomainInfo = std::mem::MaybeUninit::uninit().assume_init();
-      let ret = xenctrl_sys::xc_domain_getinfolist(self.xc, dom_id, 1, &mut info);
+      let ret = bindings::xc_domain_getinfolist(self.xc, dom_id, 1, &mut info);
       if ret != 1 || u32::from(info.domain) != dom_id {
         let error = self.get_last_error();
         if error.code == ErrorCode::None {
@@ -141,7 +143,7 @@ impl Xenctrl {
       let mut dom_id = 0;
       let mut domains = Vec::new();
       loop {
-        let ret = xenctrl_sys::xc_domain_getinfolist(self.xc, dom_id, max_doms, chunk.as_mut_ptr());
+        let ret = bindings::xc_domain_getinfolist(self.xc, dom_id, max_doms, chunk.as_mut_ptr());
         match ret {
           -1 => {
             let error = self.get_last_error();
@@ -171,7 +173,7 @@ impl Xenctrl {
 
   pub fn get_last_error (&self) -> Error {
     unsafe {
-      let error = xenctrl_sys::xc_get_last_error(self.xc);
+      let error = bindings::xc_get_last_error(self.xc);
       match ErrorCode::from_c((*error).code) {
         ErrorCode::None => {
           let os_error = std::io::Error::last_os_error().raw_os_error().unwrap();
@@ -196,7 +198,7 @@ impl Xenctrl {
 
   pub fn pause_domain (&self, dom_id: u32) -> Result<()> {
     unsafe {
-      match xenctrl_sys::xc_domain_pause(self.xc, dom_id) {
+      match bindings::xc_domain_pause(self.xc, dom_id) {
         0 => Ok(()),
         _ => Err(self.get_last_error())
       }
@@ -205,7 +207,7 @@ impl Xenctrl {
 
   pub fn unpause_domain (&self, dom_id: u32) -> Result<()> {
     unsafe {
-      match xenctrl_sys::xc_domain_unpause(self.xc, dom_id) {
+      match bindings::xc_domain_unpause(self.xc, dom_id) {
         0 => Ok(()),
         _ => Err(self.get_last_error())
       }
