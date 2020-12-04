@@ -260,8 +260,8 @@ impl Xenctrl {
     let mut ram: Vec<XenPfn> = vec!();
     ram.resize(length, 0);
     let one_mega: u64 = 1 << 20;
-    for i in 0..length-1 {
-      ram[i] = one_mega + i as u64
+    for i in 0..length {
+      ram[i] = (one_mega >> 12) + i as u64
     }
     println!("POPULATE PHYSMAP EXACT DOMAIN");
     self.populate_physmap_exact_domain(dom_id, 0, 0, &mut ram)?;
