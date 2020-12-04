@@ -259,6 +259,10 @@ impl Xenctrl {
     let length = 16;
     let mut ram: Vec<XenPfn> = vec!();
     ram.resize(length, 0);
+    let one_mega: u64 = 1 << 20;
+    for i in 0..length-1 {
+      ram[i] = one_mega + i as u64
+    }
     println!("POPULATE PHYSMAP EXACT DOMAIN");
     self.populate_physmap_exact_domain(dom_id, 0, 0, &mut ram)?;
 
@@ -337,7 +341,7 @@ impl Xenctrl {
       (*bootstrap_context).cpu.cr0 = X86_CR0_PE | X86_CR0_ET;
 
       // 6. Set the GPRs.
-      (*bootstrap_context).cpu.rip = 1 << 20;
+      (*bootstrap_context).cpu.rip = one_mega;
 
       (*bootstrap_context).cpu.dr6 = X86_DR6_DEFAULT;
       (*bootstrap_context).cpu.dr7 = X86_DR7_DEFAULT;
