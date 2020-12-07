@@ -102,8 +102,8 @@ pub type DomainInfo = bindings::xen_domctl_getdomaininfo_t;
 // -----------------------------------------------------------------------------
 
 pub type CreateDomain = bindings::xen_domctl_createdomain;
-pub const XEN_DOMCTL_CDF_hvm: u32 = bindings::XEN_DOMCTL_CDF_hvm;
-pub const XEN_DOMCTL_CDF_hap: u32 = bindings::XEN_DOMCTL_CDF_hap;
+pub const XEN_DOMCTL_CDF_HVM: u32 = bindings::XEN_DOMCTL_CDF_hvm;
+pub const XEN_DOMCTL_CDF_HAP: u32 = bindings::XEN_DOMCTL_CDF_hap;
 
 pub type ArchDomainConfig = bindings::xen_arch_domainconfig;
 pub const XEN_X86_EMU_LAPIC: u32 = bindings::XEN_X86_EMU_LAPIC;
@@ -252,8 +252,8 @@ impl Xenctrl {
   }
 
   pub fn start_domain (&self, dom_id: u32, image_path: &str) -> Result<()> {
-    self.set_max_vcpus_domain(dom_id, 1);
-    self.set_max_mem_domain(dom_id, u64::MAX);
+    self.set_max_vcpus_domain(dom_id, 1)?;
+    self.set_max_mem_domain(dom_id, u64::MAX)?;
 
     // Get foreign memory pages
     let length = 16;
@@ -275,12 +275,12 @@ impl Xenctrl {
     // Open image
     let image = match File::open(image_path) {
       Ok(img) => img,
-      Err(e) => return Err(Error::new(ErrorCode::None, "file open")) // TODO
+      Err(_e) => return Err(Error::new(ErrorCode::None, "file open")) // TODO
     };
     unsafe {
       let mmap = match Mmap::map(&image) {
         Ok(mmap) => mmap,
-        Err(e) => return Err(Error::new(ErrorCode::None, "mmap")) // TODO
+        Err(_e) => return Err(Error::new(ErrorCode::None, "mmap")) // TODO
       };
 
       // Copy image in foreing pages
@@ -308,7 +308,7 @@ impl Xenctrl {
     ) };
 
     println!("COPY FROM SLICE");
-    let bootstrap_size = (std::mem::size_of::<HvmSaveDescriptor>() + bindings::HVM_SAVE_LENGTH_HEADER as usize);
+    let bootstrap_size = std::mem::size_of::<HvmSaveDescriptor>() + bindings::HVM_SAVE_LENGTH_HEADER as usize;
 
     bootstrap_buf[0..bootstrap_size].copy_from_slice(&context[
       0..bootstrap_size

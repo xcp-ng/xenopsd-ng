@@ -65,7 +65,7 @@ impl Xenstore {
         let size = len as usize;
         let value = match String::from_utf8(std::slice::from_raw_parts(buf as *mut u8, size).to_vec()) {
           Ok(value) => value,
-          Err(e) => return Err(Error::new())
+          Err(_e) => return Err(Error::new())
         };
         libc::free(buf);
         Ok(value)

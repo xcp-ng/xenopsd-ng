@@ -102,7 +102,7 @@ fn main () {
 
     let parsed: VmShutdownParams = params.parse()?;
     let create_domain = &mut xenctrl::CreateDomain {
-      flags: xenctrl::XEN_DOMCTL_CDF_hvm | xenctrl::XEN_DOMCTL_CDF_hap,
+      flags: xenctrl::XEN_DOMCTL_CDF_HVM | xenctrl::XEN_DOMCTL_CDF_HAP,
       max_vcpus: 1,
       max_evtchn_port: u32::MAX, // -1 as u32
       max_grant_frames: 64,
