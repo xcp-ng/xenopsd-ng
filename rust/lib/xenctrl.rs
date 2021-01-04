@@ -255,8 +255,21 @@ impl Xenctrl {
     self.set_max_vcpus_domain(dom_id, 1)?;
     self.set_max_mem_domain(dom_id, u64::MAX)?;
 
+    // Open image
+    let image = match File::open(image_path) {
+      Ok(img) => img,
+      Err(_e) => return Err(Error::new(ErrorCode::None, "file open")) // TODO
+    };
+    let mmap = unsafe {
+      match Mmap::map(&image) {
+        Ok(mmap) => mmap,
+        Err(_e) => return Err(Error::new(ErrorCode::None, "mmap")) // TODO
+      }
+    };
+
     // Get foreign memory pages
-    let length = 16;
+    let length = mmap.len() >> 20;
+    println!("IMAGE LENGTH: {}", length);
     let mut ram: Vec<XenPfn> = vec!();
     ram.resize(length, 0);
     let one_mega: u64 = 1 << 20;
@@ -272,17 +285,7 @@ impl Xenctrl {
       Err(e) => return Err(e)
     };
 
-    // Open image
-    let image = match File::open(image_path) {
-      Ok(img) => img,
-      Err(_e) => return Err(Error::new(ErrorCode::None, "file open")) // TODO
-    };
     unsafe {
-      let mmap = match Mmap::map(&image) {
-        Ok(mmap) => mmap,
-        Err(_e) => return Err(Error::new(ErrorCode::None, "mmap")) // TODO
-      };
-
       // Copy image in foreing pages
       std::ptr::copy_nonoverlapping(mmap.as_ptr(), ptr as *mut u8, mmap.len());
     }
