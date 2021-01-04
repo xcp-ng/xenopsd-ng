@@ -268,7 +268,8 @@ impl Xenctrl {
     };
 
     // Get foreign memory pages
-    let length = mmap.len() >> 20;
+    println!("MMAP LENGTH: {}", mmap.len());
+    let length = (mmap.len() >> 16) + 1;
     println!("IMAGE LENGTH: {}", length);
     let mut ram: Vec<XenPfn> = vec!();
     ram.resize(length, 0);
